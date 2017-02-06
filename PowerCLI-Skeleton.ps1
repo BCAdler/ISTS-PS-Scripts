@@ -2,17 +2,18 @@
 
  param ( #add script params here
     [Parameter(Mandatory=$true)][String]$VCenterServerAddress,
-    [String]$VCenterUser,
-    [String]$VCenterPassword
+    [pscredential]$VCenterCred
 )
 
 begin { #define functions in here
     Add-PSSnapin vmware.vimautomation.core -ErrorAction Stop
     if (!$global:DefaultVIServer){ #make sure we aren't already connected
-        if ($VCenterUser -and $VCenterPassword){ 
-            Connect-VIServer -Server $VCenterServerAddress -Protocol Https -Force -ErrorAction Stop -User $VCenterUser -Password $VCenterPassword
+        if ($VCenterCred){ 
+            Connect-VIServer -Server $VCenterServerAddress -Protocol Https -Force -ErrorAction Stop -Credential $VCenterCred
         } else {
-            Connect-VIServer -Server $VCenterServerAddress -Protocol Https -Force -ErrorAction Stop
+            Write-Host "Enter your credentials to connect to vCenter:" -ForegroundColor Yellow
+            $VCenterCred = Get-Credential
+            Connect-VIServer -Server $VCenterServerAddress -Protocol Https -Force -ErrorAction Stop -Credential $VCenterCred
         }
     }
 }

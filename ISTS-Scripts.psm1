@@ -24,13 +24,16 @@ $ISTS_ModulePath = Split-Path -parent $PSCommandPath
  # Note:        Creds from the config file are stored as plaintext in memory! Be careful! 
  #>
 function Connect-ISTSVCenter {
+    param (
+        [PSCredential]$ISTS_VCenterCred
+    )
     try { #make sure we aren't already connected
         $server = (Get-VIAccount -ErrorAction SilentlyContinue)[0].Server.Name
         Write-Warning "It looks like you are already connected to the server at `"$server`", disconnect with Disconnect-VIServer and then try again"
     } catch { 
-        if ($ISTS_VCenterUser -and $ISTS_VCenterPassword){
-            Write-Warning "These credentials are stored in memory in plain text, just so you know"
-            Connect-VIServer -Server $ISTS_VCenterServerAddress -Protocol Https -Force -ErrorAction Stop -User $ISTS_VCenterUser -Password $ISTS_VCenterPassword
+        if ($ISTS_VCenterCred){
+            #Write-Warning "These credentials are stored in memory in plain text, just so you know"
+            Connect-VIServer -Server $ISTS_VCenterServerAddress -Protocol Https -Force -ErrorAction Stop -Credential $ISTS_VCenterCred
         } else {
             Connect-VIServer -Server $ISTS_VCenterServerAddress -Protocol Https -Force -ErrorAction Stop
         }
@@ -90,7 +93,7 @@ function Invoke-DeployISTSDomainController {
         [Parameter(Mandatory=$true)][int]$TeamNumber,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM,
         [String]$GuestUser = $ISTS_DomainAdminUser,
-        [String]$GuestPassword = $ISTS_DomainAdminPassword,
+        [SecureString]$GuestPassword =  (ConvertTo-SecureString -String $ISTS_DomainAdminPassword),
         [switch]$RunAsync = $false
     )
     begin {
@@ -126,7 +129,7 @@ function Invoke-AddDnsRecordsFromCSV {
         [Parameter(Mandatory=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM,
         [Parameter(Mandatory=$true)]$FileName,
         [String]$GuestUser = $ISTS_DomainAdminUser,
-        [String]$GuestPassword = $ISTS_DomainAdminPassword,
+        [SecureString]$GuestPassword =  (ConvertTo-SecureString -String $ISTS_DomainAdminPassword),
         [switch]$RunAsync = $false
     )
     if (!(Get-VCenterConnectionStatus)) { return }
