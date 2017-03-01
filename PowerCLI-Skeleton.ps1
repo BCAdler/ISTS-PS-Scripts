@@ -2,7 +2,7 @@
 
  param ( #add script params here
     [Parameter(Mandatory=$true)][String]$VCenterServerAddress,
-    [pscredential]$VCenterCred
+    [PSCredential]$VCenterCred
 )
 
 begin { #define functions in here
