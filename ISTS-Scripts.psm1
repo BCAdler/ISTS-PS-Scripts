@@ -64,7 +64,7 @@ function Get-VCenterConnectionStatus {
  #>
 function Import-ISTSConfig {
     param (
-        [string]$ConfigFile
+        [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Scripts.conf"
     )
     foreach ($line in Get-Content $ConfigFile){
         if ($line[0] -ne "#"){
@@ -277,7 +277,8 @@ function Start-ISTSDeployFromCSV {
     if (!(Get-VCenterConnectionStatus)) { return }
     $taskTab = @{}
     $nameNetwork = @{}
-    Import-Csv $FileName | % {
+    $vms = Import-Csv $FileName 
+    foreach ($vm in $vms) {
         $Template = $null
         $Template = Get-Template -Name $_.TemplateName -ErrorAction SilentlyContinue
 
@@ -291,12 +292,13 @@ function Start-ISTSDeployFromCSV {
 
         if ($Template -eq $null){
             Write-Warning "No template named $($_.TemplateName), skipping" 
-        } else {
+        } 
+        else {
 
             foreach ($TeamNumber in $TeamNumbers) {
                 Write-Progress -Activity "Deploying VMs (0/$($taskTab.Count))" -PercentComplete 0
                 $VMFolder = Get-Folder -Name ($ISTS_TeamFolderTemplate.Replace("`$TeamNumber", $TeamNumber))
-                $ResourcePool = Get-ResourcePool -Name ($ISTS_TeamResourcePoolTemplate.Replace("`$TeamNumber", $TeamNumber))
+                #$ResourcePool = Get-ResourcePool -Name ($ISTS_TeamResourcePoolTemplate.Replace("`$TeamNumber", $TeamNumber))
                 $NetworkName = $ISTS_TeamNetworkTemplate.Replace("`$NetworkID", $_.NetworkID).Replace("`$TeamNumber", $TeamNumber)
                 $VMName = $ISTS_TeamVMNameTemplate
                 $tmp = $_.TemplateName
@@ -310,10 +312,10 @@ function Start-ISTSDeployFromCSV {
                 try {
                     if (!$NetAdaptersOnly){
                         if ($Template.GetType().fullname -like "*TemplateImpl"){
-                            $ID = (New-VM -Template $Template -Name $VMName -Location $VMFolder -ResourcePool $ResourcePool -RunAsync).Id
+                            $ID = (New-VM -Template $Template -Name $VMName -Location $VMFolder -RunAsync).Id
                             $taskTab[$ID] = $VMName
                         } elseif ($Template.getType().fullname -like "*VirtualMachineImpl") {
-                            $ID = (New-VM -VM $Template -Name $VMName -Location $VMFolder -ResourcePool $ResourcePool -RunAsync).Id
+                            $ID = (New-VM -VM $Template -Name $VMName -Location $VMFolder -RunAsync).Id
                             $taskTab[$ID] = $VMName
                         } else { continue }
                     }
@@ -487,6 +489,28 @@ function Invoke-ConfirmPrompt {
         1 { Write-Host -ForegroundColor Red $OnNo; return $false }
     }
 }
+
+<# Name:        Deploy-ISTSvApps
+ # Description: Clones Team 0 / Template vApp to other teams and configures the VMs.
+ # Params:      Title - string - The title of the prompt
+ #              Message - string - The prompt message/question
+ #              YesPrompt - string - What to display next to the yes option
+ #              NoPrompt - string - What to display next to the no option
+ #              OnYes - string - What to print if the user says yes
+ #              OnNo - string - What to print if the user says no
+ # Returns:     $true if the user answers with yes, $false if no
+ # Throws:      None
+ #>
+ function Start-ISTSVAppDeployment {
+    param (
+        [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
+        [Parameter(Mandatory=$true)][string]$TemplateVApp
+    )
+
+    Import-Module -Name VMware.VimAutomation.Core
+    $Template = Get-VApp -Name $TemplateVApp
+    
+ }
 
 #### Initial config and startup ####
 Import-ISTSConfig $ISTS_ModulePath\ISTS-Scripts.conf
