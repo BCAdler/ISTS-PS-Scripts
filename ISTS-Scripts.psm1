@@ -491,11 +491,12 @@ function Invoke-ConfirmPrompt {
 }
 
 <# Name:        Deploy-ISTSvApps
- # Description: Clones Team 0 / Template vApp to other teams and configures the VMs.
+ # Description: Clones Team 0 / Template vApp to other teams and configures the VMs
  # Params:      TeamNumbers     - int[] - Team numbers to create vApp for
  #              TemplateVApp    - string - Name of vApp to use as template
  #              PathToTeamNetworkCsv - string - Path to CSV for Team Networks
- # Returns:     $true if the user answers with yes, $false if no
+ #                                              Defaults to same directory as module
+ # Returns:     None
  # Throws:      None
  #>
  function Start-ISTSVAppDeployment {
@@ -506,11 +507,12 @@ function Invoke-ConfirmPrompt {
     )
     
     Import-Module -Name VMware.VimAutomation.Vds
+    $StartTime = Get-Date
 
     # Get Team Network CSV 
     $TeamNetworksCsv = Import-Csv $PathToTeamNetworkCsv
-    $CorpVMs = $ISTS_TeamCorpVMs
-    $ProdVMs = $ISTS_TeamCorpVMs
+    $CorpVMs = "Web","DB","Win8"
+    $ProdVMs = "AD","Mail","Kali","Parrot","VOIP"
 
     # Get vApp object from given name
     $TemplateVApp = Get-VApp -Name $TemplateVAppName
@@ -521,21 +523,22 @@ function Invoke-ConfirmPrompt {
     
     foreach($i in $TeamNumbers) {
 
-        # Get Datastore Cluster or Datastore with most free space.
-        $Datastore = Get-DatastoreCluster
-        if($Datastore -eq $null) {
-            $Datastores = Get-Datastore
-            $Datastore = $Datastores[0]
-            foreach($store in $Datastores) {
-                if($store.FreeSpaceGB -gt $Datastore.FreeSpaceGB) {
-                    $Datastore = $store
-                }
+        # Get Datastore Cluster or Datastore with most free space.        
+        $Datastores = Get-Datastore
+        $Datastore = $Datastores[0]
+        foreach($store in $Datastores) {
+            if($store.FreeSpaceGB -gt $Datastore.FreeSpaceGB) {
+                $Datastore = $store
             }
         }
-
+        
         # Start cloning of template vApp and wait until it is done to continue.
         Write-Host "Starting Team $i vApp Cloning..." -ForegroundColor Yellow
         $CloneTask = New-VApp -Name "Team $i" -Location $Location -VApp $TemplateVApp -Datastore $Datastore
+        if(!$?) {
+            Write-Host "Cloning vApp Failed..." -ForegroundColor Red -BackgroundColor Black
+            exit
+        }
         Wait-Task -Task $CloneTask
         Write-Host "Team $i vApp Cloning Complete" -ForegroundColor Green
 
@@ -544,10 +547,10 @@ function Invoke-ConfirmPrompt {
         # Get all VMs in the new vApp
         $vms = Get-VApp -Name "Team $i" | Get-VM
         foreach($vm in $vms) {
-            if($CorpVMs -contains $vm.Name.Split('-').Trim()) {
+            if($CorpVMs -contains $vm.Name.Split('-').Trim()[1]) {
                 $PortGroup = Get-VDPortGroup -Name ($TeamNetworksCsv.Purpose -like "Team $i Corp*")
             }
-            elseif($ProdVMs -contains $vm.Name.Split('-').Trim()) {
+            elseif($ProdVMs -contains $vm.Name.Split('-').Trim()[1]) {
                 $PortGroup = Get-VDPortGroup -Name ($TeamNetworksCsv.Purpose -like "Team $i Prod*")
             }
 
@@ -555,9 +558,11 @@ function Invoke-ConfirmPrompt {
             $vm | Get-NetworkAdapter | Set-NetworkAdapter -Portgroup $PortGroup
 
             # Change VM name
-            Set-VM -VM $vm -Name "Team $i - $($vm.Name.Split('-').Trim())" -Confirm
+            Set-VM -VM $vm -Name "Team $i - $($vm.Name.Split('-').Trim())" -Confirm:$false
         }
         Write-Host "Configuration for Team $i complete!" -ForegroundColor Green
+        Write-Host "Script Start: $StartTime"
+        Write-Host "Script End: $(Get-Date)"
     }
  }
 
