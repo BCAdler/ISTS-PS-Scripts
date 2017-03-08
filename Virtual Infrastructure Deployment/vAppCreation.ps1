@@ -1,5 +1,3 @@
-Import-Module -Name VMware.VimAutomation.Core
-
 function New-TeamFolders {
     for ($i = 0; $i -lt 11; $i++) {
         (Get-View (Get-View -viewtype datacenter -filter @{"name"="WhiteTeam"}).vmfolder).CreateFolder("Team$i")
@@ -18,4 +16,3 @@ function New-TeamVApps {
         New-VApp 
     }
 }
-

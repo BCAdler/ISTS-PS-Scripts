@@ -1,13 +1,13 @@
 ﻿# PowerCLI script skeleton
 
- param ( #add script params here
+ param ( # add script params here
     [Parameter(Mandatory=$true)][String]$VCenterServerAddress,
-    [PSCredential]$VCenterCred
+    [Parameter(Mandatory=$true)][PSCredential]$VCenterCred
 )
 
-begin { #define functions in here
+begin { # define functions in here
     Add-PSSnapin vmware.vimautomation.core -ErrorAction Stop
-    if (!$global:DefaultVIServer){ #make sure we aren't already connected
+    if (!$global:DefaultVIServer){ # make sure we aren't already connected
         if ($VCenterCred){ 
             Connect-VIServer -Server $VCenterServerAddress -Protocol Https -Force -ErrorAction Stop -Credential $VCenterCred
         } else {
@@ -18,7 +18,7 @@ begin { #define functions in here
     }
 }
 
-process { #define main function in here
+process { # define main function in here
     foreach ($Folder in Get-Folder){
         Write-Host "A folder: $($Folder.Name)"
     }

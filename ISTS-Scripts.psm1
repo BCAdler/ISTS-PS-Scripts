@@ -238,9 +238,9 @@ function Add-WindowsHostsToDomain{
         [Parameter(Mandatory=$true)][int]$TeamNumber,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM,
         [String]$GuestUser = $ISTS_WindowsDefaultUser,
-        [String]$GuestPassword = $ISTS_WindowsDefaultPassword,
+        [SecureString]$GuestPassword = (ConvertTo-SecureString -String $ISTS_WindowsDefaultPassword -AsPlainText -),
         [String]$DomainAdminUser = $ISTS_DomainAdminUser,
-        [String]$DomainAdminPassword = $ISTS_DomainAdminPassword,
+        [SecureString]$DomainAdminPassword = (ConvertTo-SecureString -String $ISTS_DomainAdminPassword -AsPlainText),
         [String]$DNSServerIP = $ISTS_DomainControllerIPTemplate.replace("`$TeamNumber", $TeamNumber),
         [switch]$RunAsync = $false
     )
@@ -499,10 +499,12 @@ function Invoke-ConfirmPrompt {
  # Returns:     None
  # Throws:      None
  #>
- function Start-ISTSVAppDeployment {
+function Start-ISTSVAppDeployment {
     param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(Mandatory=$true)][string]$TemplateVAppName,
+        [string]$OverrideDatastore,
+        [switch]$StartVApp,
         [string]$PathToTeamNetworkCsv = "$ISTS_ModulePath/vlan_info_final.csv"
     )
     
@@ -511,8 +513,8 @@ function Invoke-ConfirmPrompt {
 
     # Get Team Network CSV 
     $TeamNetworksCsv = Import-Csv $PathToTeamNetworkCsv
-    $CorpVMs = "Web","DB","Win8"
-    $ProdVMs = "AD","Mail","Kali","Parrot","VOIP"
+    $ProdVMs = "Web","DB","Win8"
+    $CorpVMs = "AD","Mail","Kali","Parrot","VOIP"
 
     # Get vApp object from given name
     $TemplateVApp = Get-VApp -Name $TemplateVAppName
@@ -527,23 +529,28 @@ function Invoke-ConfirmPrompt {
         $Datastores = Get-Datastore
         $Datastore = $Datastores[0]
         foreach($store in $Datastores) {
-            if($store.FreeSpaceGB -gt $Datastore.FreeSpaceGB) {
+            if($store.FreeSpaceGB -gt $Datastore.FreeSpaceGB -and $store.Name -ne "santres") {
                 $Datastore = $store
             }
         }
-        
-        # Start cloning of template vApp and wait until it is done to continue.
-        Write-Host "Starting Team $i vApp Cloning..." -ForegroundColor Yellow
-        $CloneTask = New-VApp -Name "Team $i" -Location $Location -VApp $TemplateVApp -Datastore $Datastore
-        if(!$?) {
-            Write-Host "Cloning vApp Failed..." -ForegroundColor Red -BackgroundColor Black
-            exit
-        }
-        Wait-Task -Task $CloneTask
-        Write-Host "Team $i vApp Cloning Complete" -ForegroundColor Green
 
-        Write-Host "`nRenaming and Configuring Networking for Team $i's VMs." -ForegroundColor Yellow
+        if((Get-VApp -Name "Team $i") -eq $null) {
+            # Start cloning of template vApp and wait until it is done to continue.
+            Write-Host "Starting Team $i vApp Cloning..." -ForegroundColor Yellow
+            $CloneTask = New-VApp -Name "Team $i" -Location $Location -VApp $TemplateVApp -Datastore $Datastore
+            if(!$?) {
+                Write-Host "Cloning vApp Failed..." -ForegroundColor Red -BackgroundColor Black
+                exit
+            }
+            Wait-Task -Task $CloneTask
+            Write-Host "Team $i vApp Cloning Complete" -ForegroundColor Green
+        }
+        else {
+            Write-Host "vApp `"Team $i`" Already Exists...  Continuing" -ForegroundColor Yellow
+        }
         
+        Write-Host "`nRenaming and Configuring Networking for Team $i's VMs." -ForegroundColor Yellow
+
         # Get all VMs in the new vApp
         $vms = Get-VApp -Name "Team $i" | Get-VM
         foreach($vm in $vms) {
@@ -555,16 +562,85 @@ function Invoke-ConfirmPrompt {
             }
 
             # Change VM port group
-            $vm | Get-NetworkAdapter | Set-NetworkAdapter -Portgroup $PortGroup
+            $vm | Get-NetworkAdapter | Set-NetworkAdapter -Portgroup $PortGroup -Confirm:$false
 
             # Change VM name
-            Set-VM -VM $vm -Name "Team $i - $($vm.Name.Split('-').Trim())" -Confirm:$false
+            Set-VM -VM $vm -Name "Team $i - $($vm.Name.Split('-').Trim()[1])" -Confirm:$false
+        }
+        
+        # Start new vApp if $StartVApp switch is $true
+        if($StartVApp) {
+            Start-VApp -VApp (Get-VApp -Name "Team $i") -RunAsync
+            Write-Host "Team $i vApp starting." -ForegroundColor Yellow
         }
         Write-Host "Configuration for Team $i complete!" -ForegroundColor Green
         Write-Host "Script Start: $StartTime"
         Write-Host "Script End: $(Get-Date)"
+        $vms=Get-VM
+        $sw=Get-VirtualPortGroup 
     }
- }
+}
+
+<# Name:        New-ISTSSnapshots
+ # Description: Clones Team 0 / Template vApp to other teams and configures the VMs
+ # Params:      TeamNumbers     - int[] - Team numbers to create vApp for
+ #              TemplateVApp    - string - Name of vApp to use as template
+ #              PathToTeamNetworkCsv - string - Path to CSV for Team Networks
+ #                                              Defaults to same directory as module
+ # Returns:     None
+ # Throws:      None
+ #>
+function New-ISTSSnapshots {
+    param (
+        [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
+        [Parameter(Mandatory=$true)][string]$SnapshotName,
+        [string]$VMName = "",
+        [string]$SnapshotDescription = ""
+    )
+
+    foreach($i in $TeamNumbers) {
+        if($VMName -eq ""){
+            $vms = Get-VApp -Name "Team $i" | Get-VM
+        }
+        else {
+            $vms = Get-VApp -Name "Team $i" | Get-VM -Name $VMName
+        }
+        foreach($vm in $vms) {
+            New-Snapshot -VM $vm -Name $SnapshotName -Description $SnapshotDescription -RunAsync
+        }
+    }
+}
+
+<# Name:        New-ISTSSnapshots
+ # Description: Clones Team 0 / Template vApp to other teams and configures the VMs
+ # Params:      TeamNumbers     - int[] - Team numbers to create vApp for
+ #              TemplateVApp    - string - Name of vApp to use as template
+ #              PathToTeamNetworkCsv - string - Path to CSV for Team Networks
+ #                                              Defaults to same directory as module
+ # Returns:     None
+ # Throws:      None
+ #>
+function Reset-ISTSSnapshots {
+    param (
+        [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
+        [Parameter(Mandatory=$true)][string]$SnapshotName,
+        [string]$VMName = ""
+    )
+
+    foreach($i in $TeamNumbers) {
+        if($VMName -eq ""){
+            $vms = Get-VApp -Name "Team $i" | Get-VM
+        }
+        else {
+            $vms = Get-VApp -Name "Team $i" | Get-VM -Name "* $VMName"
+        }
+        foreach($vm in $vms) {
+            Set-Snapshot -Snapshot (Get-Snapshot -VM $vm -Name $SnapshotName) -RunAsync
+            $vm.PowerState
+        }
+        $
+    }
+}
 
 #### Initial config and startup ####
 Import-ISTSConfig $ISTS_ModulePath\ISTS-Scripts.conf

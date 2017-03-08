@@ -1,12 +1,13 @@
-﻿$ROLE_NAME = "BlueTeam"
+﻿param (
+    [Parameter(Mandatory=$true)][int[]]$TeamNumbers
+)
+$ROLE_NAME = "BlueTeam"
 
-$csv = Import-Csv -Path '.\team_users.csv' -Header name, teamid
-
-Foreach($user in $csv) {
-    $vms = Get-VM -name "Team $($user.teamid) *"
-    Foreach($vm in $vms) {
+foreach($i in $TeamNumbers) {
+    $vms = Get-VM -Name "Team $i *"
+    foreach($vm in $vms) {
         $role = Get-VIRole -Name "$ROLE_NAME"
-        Write-Host "Assigning Role $($role) to: $($vm.Name)"
-        New-VIPermission -Entity ($vm) -Role ($role) -Principal "WHITETEAM.VSPHERE\$($user.name)"
+        Write-Host "Assigning Role $role to: $($vm.Name)"
+        New-VIPermission -Entity $vm -Role $role -Principal "WHITETEAM.VSPHERE\Team$i"
     }
 }
