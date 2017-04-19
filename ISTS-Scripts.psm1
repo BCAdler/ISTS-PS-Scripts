@@ -635,10 +635,9 @@ function Reset-ISTSSnapshots {
             $vms = Get-VApp -Name "Team $i" | Get-VM -Name "* $VMName"
         }
         foreach($vm in $vms) {
-            Set-Snapshot -Snapshot (Get-Snapshot -VM $vm -Name $SnapshotName) -RunAsync
-            $vm.PowerState
+            Set-VM -VM $vm -Snapshot (Get-Snapshot -VM $vm -Name $SnapshotName) -RunAsync -Confirm:$false
+            Write-Host "VM: " + $vm.Name + "`tState: "+ $vm.PowerState
         }
-        $
     }
 }
 
