@@ -641,5 +641,32 @@ function Reset-ISTSSnapshots {
     }
 }
 
+function Add-TeamPermissions {
+    param (
+        [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
+        [string]$RoleName = "BlueTeam",
+        [string]$vCenterDomainName = "VSPHERE.LOCAL",
+        [Switch]$CreateAccounts = $false
+    )
+    
+    if($CreateAccounts) {
+        Write-Host "Creating Team Accounts..." -ForegroundColor Yellow
+        Write-Host "Not Implemented Yet But Will Be Soon......" -ForegroundColor Yellow
+
+    }
+
+    foreach($i in $TeamNumbers) {
+        # Regex Meaning: vApp name with "Team $i" that matches the number and then anything after the number or nothing
+        #                Fixes issues where "Team $i*" will match "Team 1" and "Team 10."
+        $vapps = Get-VApp | Where-Object { $_.Name -match "Team \b${i}\b(?:.*)?" }
+
+        foreach($vapp in $vapps) {
+            $role = Get-VIRole -Name "$RoleName"
+            Write-Host "Assigning User: Team$i with Role: $role to: $($vapp.Name)"
+            New-VIPermission -Entity $vapp -Role $role -Principal "$vCenterDomainName\team$i"
+        }
+    }
+}
+
 #### Initial config and startup ####
 Import-ISTSConfig $ISTS_ModulePath\ISTS-Scripts.conf
