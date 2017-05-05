@@ -76,6 +76,28 @@ function Import-ISTSConfig {
     }
 }
 
+<# Name:        Import-ISTSYAMLConfig
+ # Description: Sets variables for use in the script (prefixed by ISTS_) in YAML
+ # Params:      ConfigFile - The path to the configuration file to load
+ # Returns:     None
+ # Throws:      None
+ #>
+function Import-ISTSYAMLConfig {
+    param (
+        [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Scripts.conf"
+    )
+    foreach ($line in Get-Content $ConfigFile){
+        $line = $line.Trim()
+        if ($line[0] -ne "#" -and $line[0] -eq "-"){
+            
+            $splitline = $line.split(":")
+            $varName = $splitline[0].TrimStart('- ').Trim()
+            $varValue = $splitline[1..($splitline.length - 1)].TrimStart() -join "="
+            Set-Variable -Name ISTS_$varName -Value $varValue -Scope Script
+        }
+    }
+}
+
 <# Name:        Invoke-DeployISTSDomainController
  # Description: Uploads an AD deployment script to the VM's passed in and runs it
  # Params:      TeamNumber - int,required - The team number to insert

@@ -1,0 +1,5 @@
+# vCenter Configs
+vcenter:
+    - test: hello
+    - this: IPHERE
+    #sasdflkj
