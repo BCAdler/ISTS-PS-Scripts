@@ -83,6 +83,8 @@ function Import-ISTSConfig {
  # Throws:      None
  #>
 function Import-ISTSYAMLConfig {
+    #TODO: Make sections in YAML meaningful.  Break up config into sections
+    #       and append it to variables under it such as vCenterIP.  "Section"+"Variable"
     param (
         [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Scripts.conf"
     )
