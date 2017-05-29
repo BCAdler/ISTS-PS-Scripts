@@ -3,15 +3,6 @@
     It was designed and used for the deployment of the ISTS14 (2016) competition at RIT
 #>
 
-# these checks are for modules
-if ( (Get-PSSnapin -Name VMware.VimAutomation.Core -ErrorAction SilentlyContinue) -eq $null ){
-    Write-Error "Make sure vmware.vimautomation.core is added. Import in PowerCLI shell or just Add-PSSnapin VMware.VimAutomation.Core"
-}
-if ( (Get-Module -Name VMware.VimAutomation.Vds -ErrorAction SilentlyContinue) -eq $null ){
-    Write-Warning "Make sure vmware.vimautomation.Vds is added if you want to create networks. Import in PowerCLI shell or just Import-Module VMware.VimAutomation.Vds"
-}
-
-
 # Get the path the module is running in
 $ISTS_ModulePath = Split-Path -parent $PSCommandPath
 
