@@ -1,6 +1,11 @@
 ﻿<#
-    ISTS-Scripts.psm1 - powercli scripts to help with ESXi deployment and team replication
-    It was designed and used for the deployment of the ISTS14 (2016) competition at RIT
+    ISTS-Scripts.psm1 - PowerCli scripts to help with ESXi deployment and team replication.
+    It was designed and used for the deployment of the ISTS14 (2016) competition at RIT.
+
+    Author: Jaime Geiger
+    Maintainer and Updater: Brandon Adler
+    Contributors: Jesse Buonanno
+                  Kyle Carretto
 #>
 
 # Get the path the module is running in
