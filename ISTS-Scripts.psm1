@@ -1,5 +1,4 @@
-﻿#Requires -Version 4.0
-<#
+﻿<#
     ISTS-Scripts.psm1 - powercli scripts to help with ESXi deployment and team replication
     It was designed and used for the deployment of the ISTS14 (2016) competition at RIT
 #>
@@ -100,18 +99,34 @@ function Import-ISTSYAMLConfig {
     }
 }
 
-<# Name:        Invoke-DeployISTSDomainController
- # Description: Uploads an AD deployment script to the VM's passed in and runs it
- # Params:      TeamNumber - int,required - The team number to insert
- #              VM - VirtualMachineImpl,required - the VM to run the script on
- #              GuestUser - string - Username to use to log into the VM
- #                                 - Populated by ISTS_DomainAdminUser if blank
- #              GuestPassword - string - Password to use to log into the VM
- #                                     - Populated by ISTS_DomainAdminPassword if blank
- #              RunAsync - bool - Whether to wait between starting each deployment
- # Returns:     None
- # Throws:      None
- #>
+<#
+ .SYNOPSIS
+ Uploads an AD deployment script to the VM's passed in and executes it.
+ 
+ .DESCRIPTION
+ Uploads an AD deployment script to the VM's passed in and executes it.
+ 
+ .PARAMETER TeamNumber
+ The team number to insert.
+ 
+ .PARAMETER VM
+ The VM to run the script on.
+ 
+ .PARAMETER GuestUser
+ Username to use to log into the VM.  Populated by ISTS_DomainAdminPassword if blank.
+ 
+ .PARAMETER GuestPassword
+ Password to use to log into the VM.  Populated by ISTS_DomainAdminPassword if blank.
+ 
+ .PARAMETER RunAsync
+ Whether to wait between starting each deployment.
+
+ .INPUTS
+ None
+
+ .OUTPUTS
+ None
+#>
 function Invoke-DeployISTSDomainController {
     param ( 
         [Parameter(Mandatory=$true)][int]$TeamNumber,
