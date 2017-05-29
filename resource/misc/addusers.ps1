@@ -17,7 +17,7 @@ foreach ($l in $csv){
 	} else {
 		$lnames = $name[1..($name.length-1)] -join " "
 		$lname = $lnames.replace(" ", '')
-		$email = "$fname.$($lnames.replace(' ', '.')".ToLower() + "@team$TeamNumber.ists"
+		$email = "$fname.$($lnames.replace(' ', '.'))".ToLower() + "@team$TeamNumber.ists"
 	}
 	if ($fname.length -ge 20){
 		$sam = ($fname.substring(0,19)) + $lname[0]
