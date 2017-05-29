@@ -18,7 +18,7 @@ $ISTS_ModulePath = Split-Path -parent $PSCommandPath
  # Throws:      Error if already connected
  # Note:        Creds from the config file are stored as plaintext in memory! Be careful! 
  #>
-function Connect-ISTSVCenter {
+function Connect-VCenter {
     param (
         [PSCredential]$ISTS_VCenterCred
     )
@@ -57,7 +57,7 @@ function Get-VCenterConnectionStatus {
  # Returns:     None
  # Throws:      None
  #>
-function Import-ISTSConfig {
+function Import-Config {
     param (
         [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Scripts.conf"
     )
@@ -77,7 +77,7 @@ function Import-ISTSConfig {
  # Returns:     None
  # Throws:      None
  #>
-function Import-ISTSYAMLConfig {
+function Import-YAMLConfig {
     #TODO: Make sections in YAML meaningful.  Break up config into sections
     #       and append it to variables under it such as vCenterIP.  "Section"+"Variable"
     param (
@@ -123,7 +123,7 @@ function Import-ISTSYAMLConfig {
  .OUTPUTS
  None
 #>
-function Invoke-DeployISTSDomainController {
+function Invoke-DeployDomainController {
     param ( 
         [Parameter(Mandatory=$true)][int]$TeamNumber,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM,
@@ -302,7 +302,7 @@ function Add-WindowsHostsToDomain{
  # Throws:      None
  # Note:        If you don't want this script to deploy networks then provide a bogus network name
  #>
-function Start-ISTSDeployFromCSV {
+function Start-DeployFromCSV {
     param (
         [Parameter(Mandatory=$true)][string]$FileName,
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
@@ -409,7 +409,7 @@ function Start-ISTSDeployFromCSV {
  # Throws:      None
  # Note:        Uses ISTS_TeamFolderTemplate to name the folders
  #>
-function Add-ISTSVMFolders {
+function Add-VMFolders {
     param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.FolderImpl]$ParentFolder
@@ -441,7 +441,7 @@ function Add-ISTSVMFolders {
  # Throws:      None
  # Note:        Uses ISTS_TeamResourcePoolTemplate to name the resource pools
  #>
-function Add-ISTSResourcePools {
+function Add-ResourcePools {
     param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.ResourcePoolImpl]$ParentPool
@@ -476,7 +476,7 @@ function Add-ISTSResourcePools {
  # Note:        Check out how VlanIDMappings are set up in the example config
  # Note:        Uses ISTS_TeamNetworkTemplate from the config to name networks
  #>
-function Add-ISTSNetworks {
+function Add-Networks {
     param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(Mandatory=$true)][string[]]$NetworkNames,
@@ -534,7 +534,7 @@ function Invoke-ConfirmPrompt {
  # Returns:     None
  # Throws:      None
  #>
-function Start-ISTSVAppDeployment {
+function Start-VAppDeployment {
     param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(Mandatory=$true)][string]$TemplateVAppName,
@@ -625,7 +625,7 @@ function Start-ISTSVAppDeployment {
  # Returns:     None
  # Throws:      None
  #>
-function New-ISTSSnapshots {
+function New-Snapshots {
     param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(Mandatory=$true)][string]$SnapshotName,
@@ -655,7 +655,7 @@ function New-ISTSSnapshots {
  # Returns:     None
  # Throws:      None
  #>
-function Reset-ISTSSnapshots {
+function Reset-Snapshots {
     param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(Mandatory=$true)][string]$SnapshotName,
@@ -704,4 +704,4 @@ function Add-TeamPermissions {
 }
 
 #### Initial config and startup ####
-Import-ISTSConfig $ISTS_ModulePath\ISTS-Scripts.conf
+Import-Config $ISTS_ModulePath\ISTS-Scripts.conf
