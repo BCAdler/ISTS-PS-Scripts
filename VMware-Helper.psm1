@@ -2,15 +2,24 @@
     Helper functions used for automation of general infrastructure tasks.
 #>
 
-<# Name:        Connect-ISTSVCenter
- # Description: Connects to vcenter from config or prompt
- # Params:      None
- # Returns:     None
- # Throws:      Error if already connected
- # Note:        Creds from the config file are stored as plaintext in memory! Be careful! 
- #>
+<#
+    .SYNOPSIS
+    Connects to vCenter from config or prompt.
+
+    .DESCRIPTION
+    Connects to vCenter from config or prompt.
+
+    .PARAMETER ISTS_VCenterCred
+    Parameter description
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    Throws error if already connected.
+#>
 function Connect-VCenter {
-    param (
+    Param (
         [PSCredential]$ISTS_VCenterCred
     )
     try { #make sure we aren't already connected
@@ -26,12 +35,22 @@ function Connect-VCenter {
     }
 }
 
-<# Name:        Get-VCenterConnectionStatus
- # Description: Run a simple test to see if the VCenter server is connected
- # Params:      None
- # Returns:     $true if vcenter is connected, $false if not
- # Throws:      Error if check fails
- #>
+<#
+    .SYNOPSIS
+    Run a simple test to see if the VCenter server is connected.
+
+    .DESCRIPTION
+    Run a simple test to see if the VCenter server is connected.
+
+    .EXAMPLE
+    An example
+
+    .OUTPUTS
+    Returns $true if vcenter is connected, $false if not.
+
+    .NOTES
+    Throws error if check fails.
+#>
 function Get-VCenterConnectionStatus {
     try {
         $server = (Get-VIAccount -ErrorAction SilentlyContinue)[0].Server.Name
@@ -42,21 +61,37 @@ function Get-VCenterConnectionStatus {
     }
 }
 
-<# Name:        New-ISTSSnapshots
- # Description: Clones Team 0 / Template vApp to other teams and configures the VMs
- # Params:      TeamNumbers     - int[] - Team numbers to create vApp for
- #              TemplateVApp    - string - Name of vApp to use as template
- #              PathToTeamNetworkCsv - string - Path to CSV for Team Networks
- #                                              Defaults to same directory as module
- # Returns:     None
- # Throws:      None
- #>
+<#
+    .SYNOPSIS
+    Creates snapshots for all of the VM belonging to the specified teams.
+
+    .DESCRIPTION
+    Creates snapshots for all of the VM belonging to the specified teams.
+
+    .PARAMETER TeamNumbers
+    Team numbers to take snapshots for.
+
+    .PARAMETER SnapshotName
+    Name of the snapshots to take.
+
+    .PARAMETER SnapshotDescription
+    Description of the snapshots to take.
+
+    .PARAMETER VMName
+    Use this to if you only want to take snapshots of a specific VM for each team.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    General notes
+#>
 function New-Snapshots {
-    param (
+    Param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(Mandatory=$true)][string]$SnapshotName,
-        [string]$VMName = "",
-        [string]$SnapshotDescription = ""
+        [string]$SnapshotDescription = "",
+        [string]$VMName = ""
     )
 
     foreach($i in $TeamNumbers) {
@@ -72,17 +107,30 @@ function New-Snapshots {
     }
 }
 
-<# Name:        New-ISTSSnapshots
- # Description: Clones Team 0 / Template vApp to other teams and configures the VMs
- # Params:      TeamNumbers     - int[] - Team numbers to create vApp for
- #              TemplateVApp    - string - Name of vApp to use as template
- #              PathToTeamNetworkCsv - string - Path to CSV for Team Networks
- #                                              Defaults to same directory as module
- # Returns:     None
- # Throws:      None
- #>
+<#
+    .SYNOPSIS
+    Reverts team VMs to the specific snapshot specified.
+
+    .DESCRIPTION
+    Reverts team VMs to the specific snapshot specified. Automatically runs asynchronously without confirmation.
+
+    .PARAMETER TeamNumbers
+    Team numbers to revert the specified snapshot for.
+
+    .PARAMETER SnapshotName
+    Name of the snapshot to revert the VMs to.
+
+    .PARAMETER VMName
+    Use this to if you only want to rever to the snapshot of a specific VM for each team.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    General notes
+#>
 function Reset-Snapshots {
-    param (
+    Param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(Mandatory=$true)][string]$SnapshotName,
         [string]$VMName = ""
@@ -102,11 +150,28 @@ function Reset-Snapshots {
     }
 }
 
+<#
+    .SYNOPSIS
+    Permanently deletes all of the VMs matching the name specified.
+
+    .DESCRIPTION
+    Permanently deletes all of the VMs matching the name specified.  Will go through entire vCenter looking for VMs matching using the logic (*$VM).
+
+    .PARAMETER VM
+    Name of the VM to delete from disk for every team.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    Generally used when there is a deployment issue found in a single VM for all of the teams.
+#>
 function Remove-AllTeamVMFromDisk {
     Param (
         [Parameter(Mandatory=$true)][string]$VM
     )
     # TODO: Add mandatory confirmation of VMs to be deleted.
+    # TODO: Exclude any VMs belonging to Team 0.
 
     Write-Host "Stopping and Destroying all `"$VM`" VMs" -ForegroundColor Red
     $vms = Get-VM -Name "*$VM"
@@ -118,6 +183,24 @@ function Remove-AllTeamVMFromDisk {
     Wait-Task -Task $task
 }
 
+<#
+    .SYNOPSIS
+    PREMATURE FUNCTION
+    Sets the networking on the specified team numbers.
+
+    .DESCRIPTION
+    PREMATURE FUNCTION
+    Sets the networking on the specified team numbers.
+
+    .PARAMETER TeamNumbers
+    List of team numbers to set the VM networking for.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    This function is currently incomplete but will be finished at some point.
+#>
 function Set-MassVMNetworking {
     Param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers
@@ -145,8 +228,24 @@ function Set-MassVMNetworking {
     }
 }
 
-function Set-ISTSVMName {
-    param (
+<#
+    .SYNOPSIS
+    Sets the names for the specified teams. To be used after deployment.
+
+    .DESCRIPTION
+    Sets the names for the specified teams. To be used after deployment.
+
+    .PARAMETER TeamNumbers
+    List of team numbers to rename VMs for.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    Based off of the VM naming format "Team 0 - Function"
+#>
+function Set-VMName {
+    Param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers
     )
     foreach ($i in $TeamNumbers) {
@@ -157,8 +256,29 @@ function Set-ISTSVMName {
     }
 }
 
-function New-ISTSVMClone {
-    param (
+<#
+    .SYNOPSIS
+    DEPRECATED - Use Start-ISTSVAppDeployment
+    Clones a VM from a template into all of the team vApps available.
+
+    .DESCRIPTION
+    DEPRECATED - Use Start-ISTSVAppDeployment
+    Clones a VM from a template into all of the team vApps available.
+
+    .PARAMETER VMName
+    Parameter description
+
+    .PARAMETER VMTemplate
+    Parameter description
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    DEPRECATED - Use Start-ISTSVAppDeployment
+#>
+function New-VMClone {
+    Param (
         [Parameter(Mandatory=$true)][string]$VMName,
         [Parameter(Mandatory=$true)][string]$VMTemplate
     )
