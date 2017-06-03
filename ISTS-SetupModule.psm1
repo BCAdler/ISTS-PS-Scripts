@@ -15,8 +15,10 @@ $ISTS_ModulePath = Split-Path -parent $PSCommandPath
  # Throws:      None
  # Note:        If you don't want this script to deploy networks then provide a bogus network name
  #>
+
+
 function Start-DeployFromCSV {
-    param (
+    Param (
         [Parameter(Mandatory=$true)][string]$FileName,
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [switch]$StartOnCompletion = [bool]$ISTS_StartOnCompletion,
@@ -121,7 +123,7 @@ function Start-DeployFromCSV {
  # Throws:      None
  #>
 function Import-Config {
-    param (
+    Param (
         [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Scripts.conf"
     )
     foreach ($line in Get-Content $ConfigFile){
@@ -143,7 +145,7 @@ function Import-Config {
 function Import-YAMLConfig {
     #TODO: Make sections in YAML meaningful.  Break up config into sections
     #       and append it to variables under it such as vCenterIP.  "Section"+"Variable"
-    param (
+    Param (
         [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Scripts.conf"
     )
     foreach ($line in Get-Content $ConfigFile){
@@ -170,7 +172,7 @@ function Import-YAMLConfig {
  # Throws:      None
  #>
 function Invoke-ConfirmPrompt {
-    param(
+    Param(
         [string]$Title = "Continue?",
         [string]$Message = "",
         [string]$YesPrompt = "Continue",
