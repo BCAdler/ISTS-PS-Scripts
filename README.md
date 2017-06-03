@@ -1,4 +1,14 @@
-# ISTS-PS-Scripts
+# ISTS-PS-Scripts - MUST BE UPDATED
+PowerCli scripts to help with ESXi deployment and team replication.
+It was designed and used for the deployment of the ISTS14 (2016) competition at RIT.
+Currently maintained, updated, and used for all current and future competitions.
+
+    Author: Jaime Geiger
+    Maintainer and Updater: Brandon Adler
+    Contributors: Jesse Buonanno
+                  Kyle Carretto
+
+
 Useful scripts to configure VMs with PowerCLI and to deploy AD domains. Written for and used to deploy VMs at SPARSA's ISTS14 competiton
 
 There are a lot of things here, check out [ISTS-Scripts.psm1](ISTS-Scripts.psm1)
