@@ -106,7 +106,7 @@ function Add-VMFolders {
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.FolderImpl]$ParentFolder
     )
-    if (!(Get-VCenterConnectionStatus)) { return } # TODO: look into this 
+    
     if (!$ParentFolder) {
         $message = "No parent folder specified. Create folders in the root of the first datacenter ($((Get-Datacenter)[0]))?"
         if (!(Invoke-ConfirmPrompt -Message $message)) {
