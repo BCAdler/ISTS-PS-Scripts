@@ -2,15 +2,34 @@
     Functions to automate deploying of virtualized infrastructure.
 #>
 
-<# Name:        Deploy-ISTSvApps
- # Description: Clones Team 0 / Template vApp to other teams and configures the VMs
- # Params:      TeamNumbers     - int[] - Team numbers to create vApp for
- #              TemplateVApp    - string - Name of vApp to use as template
- #              PathToTeamNetworkCsv - string - Path to CSV for Team Networks
- #                                              Defaults to same directory as module
- # Returns:     None
- # Throws:      None
- #>
+<#
+    .SYNOPSIS
+    Clones Team 0 / Template vApp to other teams and configures the VMs.
+
+    .DESCRIPTION
+    Clones Team 0 / Template vApp to other teams and configures the VMs.
+
+    .PARAMETER TeamNumbers
+    Team numbers to create vApp for.
+
+    .PARAMETER TemplateVAppName
+    Name of vApp to use as template.
+
+    .PARAMETER OverrideDatastore
+    Parameter description
+
+    .PARAMETER StartVApp
+    Specified whether to start vApp automatically after deployment.
+
+    .PARAMETER PathToTeamNetworkCsv
+    Path to CSV for Team Networks.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    General notes
+#>
 function Start-VAppDeployment {
     Param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
@@ -19,8 +38,6 @@ function Start-VAppDeployment {
         [switch]$StartVApp,
         [string]$PathToTeamNetworkCsv = "$ISTS_ModulePath/vlan_info_final.csv"
     )
-    
-    Import-Module -Name VMware.VimAutomation.Vds
     $StartTime = Get-Date
 
     # Get Team Network CSV 
@@ -40,7 +57,7 @@ function Start-VAppDeployment {
         $Datastores = Get-Datastore
         $Datastore = $Datastores[0]
         foreach($store in $Datastores) {
-            if($store.FreeSpaceGB -gt $Datastore.FreeSpaceGB -and $store.Name -ne "santres") {
+            if($store.FreeSpaceGB -gt $Datastore.FreeSpaceGB) {
                 $Datastore = $store
             }
         }
@@ -93,14 +110,25 @@ function Start-VAppDeployment {
     }
 }
 
-<# Name:        Add-ISTSVMFolders
- # Description: Mass adds organizational folders based on team numbers
- # Params:      TeamNumbers - int[],required - List of team folders to add
- #              ParentFolder - FolderImpl,required - Folder to place created folders under
- # Returns:     None
- # Throws:      None
- # Note:        Uses ISTS_TeamFolderTemplate to name the folders
- #>
+<#
+    .SYNOPSIS
+    Mass adds organizational folders based on team numbers.
+
+    .DESCRIPTION
+    Mass adds organizational folders based on team numbers.
+
+    .PARAMETER TeamNumbers
+    List of team numbers to add folders for.
+
+    .PARAMETER ParentFolder
+    Folder to place created folders under.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    General notes
+#>
 function Add-VMFolders {
     Param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
@@ -126,14 +154,26 @@ function Add-VMFolders {
     }
 }
 
-<# Name:        Add-ISTSResourcePools
- # Description: Mass adds resource pools based on team numbers
- # Params:      TeamNumbers - int[],required - List of team resource pools to add
- #              ParentPool - ResourcePoolImpl,required - Pool to place created pools under
- # Returns:     None
- # Throws:      None
- # Note:        Uses ISTS_TeamResourcePoolTemplate to name the resource pools
- #>
+<#
+    .SYNOPSIS
+    Mass adds resource pools based on team numbers.
+    OUTDATED: Should use Start-VAppDeployment.
+
+    .DESCRIPTION
+    Mass adds resource pools based on team numbers
+
+    .PARAMETER TeamNumbers
+    List of team numbers to add resource pools for.
+
+    .PARAMETER ParentPool
+    Pool to place created pools under.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    Uses ISTS_TeamResourcePoolTemplate to name the resource pools.
+#>
 function Add-ResourcePools {
     Param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
@@ -156,24 +196,37 @@ function Add-ResourcePools {
     }
 }
 
-<# Name:        Add-ISTSNetworks
- # Description: Mass adds networks based on names, team numbers, and VLAN mappings
- # Params:      TeamNumbers - int[],required - List of teams to add networks for
- #              NetworkNames - string[],required - List of network names to add
- #              ParentDVSwitchName - string - Name of the parent DVSwitch
- #                                          - Gets default from ISTS_ParentDVSwitch
- #              VlanIDMappings - string - VLAN ID mapping string for users/networks
- #                                      - Gets default from ISTS_VlanIDMappings
- # Returns:     None
- # Throws:      None
- # Note:        Check out how VlanIDMappings are set up in the example config
- # Note:        Uses ISTS_TeamNetworkTemplate from the config to name networks
- #>
+<#
+    .SYNOPSIS
+    Mass adds networks based on names, team numbers, and VLAN mappings.
+
+    .DESCRIPTION
+    Mass adds networks based on names, team numbers, and VLAN mappings.
+
+    .PARAMETER TeamNumbers
+    List of team numbers to add networks for.
+
+    .PARAMETER NetworkNames
+    List of network names to add.
+
+    .PARAMETER DVSwitchName
+    Name of the DVSwitch to add the portgroups to.  Gets default from ISTS_DVSwitch.
+
+    .PARAMETER VlanIDMappings
+    VLAN ID mapping string for users/networks.  Gets default from ISTS_VlanIDMappings.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    Check out how VlanIDMappings are set up in the example config.
+    Uses ISTS_TeamNetworkTemplate from the config to name networks.
+#>
 function Add-Networks {
     Param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(Mandatory=$true)][string[]]$NetworkNames,
-        [string]$ParentDVSwitchName = $ISTS_ParentDVSwitchName,
+        [string]$DVSwitchName = $ISTS_DVSwitchName,
         [string]$VlanIDMappings = $ISTS_VlanIDMappings
     )
     $VDSwitch = Get-VDSwitch -Name $ParentDVSwitchName -ErrorAction Stop
@@ -187,11 +240,36 @@ function Add-Networks {
 
 }
 
+<#
+    .SYNOPSIS
+    Configures permissions for each team vApp.
+
+    .DESCRIPTION
+    Configures permissions for each team vApp so users cannot see each others vApps or VMs.
+
+    .PARAMETER TeamNumbers
+    List of team numbers to congigure permissions for.
+
+    .PARAMETER RoleName # TODO: Make config variable for vCenter RoleName
+    Name of the role used to assign permissions to teams.  Same name as configured in vCenter.
+
+    .PARAMETER DomainName # TODO: Make config variable for Domain Name
+    Domain name used for the team accounts.  May be the vCenter SSO domain or the AD domain name depending on where the user accounts were created.
+
+    .PARAMETER CreateAccounts
+    NOT IMPLEMENTED YET.  Specifies whether to create accounts for the teams being deployed.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    General notes
+#>
 function Add-TeamPermissions {
     Param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [string]$RoleName = "BlueTeam",
-        [string]$vCenterDomainName = "VSPHERE.LOCAL",
+        [string]$DomainName = "VSPHERE.LOCAL",
         [Switch]$CreateAccounts = $false
     )
     
@@ -209,7 +287,7 @@ function Add-TeamPermissions {
         foreach($vapp in $vapps) {
             $role = Get-VIRole -Name "$RoleName"
             Write-Host "Assigning User: Team$i with Role: $role to: $($vapp.Name)"
-            New-VIPermission -Entity $vapp -Role $role -Principal "$vCenterDomainName\team$i"
+            New-VIPermission -Entity $vapp -Role $role -Principal "$DomainName\team$i"
         }
     }
 }
