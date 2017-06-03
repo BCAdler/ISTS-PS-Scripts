@@ -1,6 +1,6 @@
 ﻿# PowerCLI script skeleton
 
- param ( # add script params here
+ Param ( # add script params here
     [Parameter(Mandatory=$true)][String]$VCenterServerAddress,
     [Parameter(Mandatory=$true)][PSCredential]$VCenterCred
 )
