@@ -5,18 +5,31 @@
 # Get the path the module is running in
 $ISTS_ModulePath = Split-Path -parent $PSCommandPath
 
-<# Name:        Start-ISTSDeployFromCSV
- # Description: Programatically clones, configures, snapshots, and starts VMs in parallel
- # Params:      FileName - string,required - The CSV file name to deploy from
- #              TeamNumbers - int[],required - The teams to deploy to
- #              StartOnCompletion - bool - Whether to start the VM when the process is finished
- #              TakeBaseSnapshot - bool - Whether to take a base snapshot of the VM when the process is finished
- # Returns:     None
- # Throws:      None
- # Note:        If you don't want this script to deploy networks then provide a bogus network name
- #>
+<#
+    .SYNOPSIS
+    Programatically clones, configures, snapshots, and starts VMs in parallel.
 
+    .DESCRIPTION
+    Programatically clones, configures, snapshots, and starts VMs in parallel.
 
+    .PARAMETER FileName
+    The CSV file name to deploy from.
+
+    .PARAMETER TeamNumbers
+    The teams to deploy to
+
+    .PARAMETER StartOnCompletion
+    Whether to start the VM when the process is finished.
+
+    .PARAMETER TakeBaseSnapshot
+    Whether to take a base snapshot of the VM when the process is finished.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    If you don't want this script to deploy networks then provide a bogus network name.
+#>
 function Start-DeployFromCSV {
     Param (
         [Parameter(Mandatory=$true)][string]$FileName,
@@ -116,12 +129,22 @@ function Start-DeployFromCSV {
     }
 }
 
-<# Name:        Import-ISTSConfig
- # Description: Sets variables for use in the script (prefixed by ISTS_)
- # Params:      ConfigFile - The path to the configuration file to load
- # Returns:     None
- # Throws:      None
- #>
+<#
+    .SYNOPSIS
+    Sets variables for use in the script (prefixed by ISTS_).
+
+    .DESCRIPTION
+    Sets variables for use in the script (prefixed by ISTS_).
+
+    .PARAMETER ConfigFile
+    The path to the configuration file to load.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    General notes
+#>
 function Import-Config {
     Param (
         [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Scripts.conf"
@@ -136,12 +159,22 @@ function Import-Config {
     }
 }
 
-<# Name:        Import-ISTSYAMLConfig
- # Description: Sets variables for use in the script (prefixed by ISTS_) in YAML
- # Params:      ConfigFile - The path to the configuration file to load
- # Returns:     None
- # Throws:      None
- #>
+<#
+    .SYNOPSIS
+    Sets variables for use in the script (prefixed by ISTS_) in YAML.
+
+    .DESCRIPTION
+    Sets variables for use in the script (prefixed by ISTS_) in YAML.
+
+    .PARAMETER ConfigFile
+    The path to the configuration file to load.
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    General notes
+#>
 function Import-YAMLConfig {
     #TODO: Make sections in YAML meaningful.  Break up config into sections
     #       and append it to variables under it such as vCenterIP.  "Section"+"Variable"
@@ -160,17 +193,40 @@ function Import-YAMLConfig {
     }
 }
 
-<# Name:        Invoke-ConfirmPrompt
- # Description: Creates a prompt for the user
- # Params:      Title - string - The title of the prompt
- #              Message - string - The prompt message/question
- #              YesPrompt - string - What to display next to the yes option
- #              NoPrompt - string - What to display next to the no option
- #              OnYes - string - What to print if the user says yes
- #              OnNo - string - What to print if the user says no
- # Returns:     $true if the user answers with yes, $false if no
- # Throws:      None
- #>
+<#
+    .SYNOPSIS
+    Creates a prompt for the user
+
+    .DESCRIPTION
+    Creates a prompt for the user
+
+    .PARAMETER Title
+    The title of the prompt
+
+    .PARAMETER Message
+    The prompt message/question
+
+    .PARAMETER YesPrompt
+    What to display next to the yes option
+
+    .PARAMETER NoPrompt
+    What to display next to the no option
+
+    .PARAMETER OnYes
+    What to print if the user says yes
+
+    .PARAMETER OnNo
+    What to print if the user says no
+
+    .EXAMPLE
+    An example
+
+    .OUTPUTS
+    Returns $true if the user answers with yes, $false if no.
+
+    .NOTES
+    General notes
+#>
 function Invoke-ConfirmPrompt {
     Param(
         [string]$Title = "Continue?",
