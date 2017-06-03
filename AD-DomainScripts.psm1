@@ -31,7 +31,7 @@
     None
 #>
 function Invoke-DeployDomainController {
-    param ( 
+    Param ( 
         [Parameter(Mandatory=$true)][int]$TeamNumber,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM,
         [String]$GuestUser = $ISTS_DomainAdminUser,
@@ -51,54 +51,95 @@ function Invoke-DeployDomainController {
     }
 }
 
-<# Name:        Invoke-AddDnsRecordsFromCSV
- # Description: Takes DNS records from a CSV file and adds them to a Windows Server
- # Params:      TeamNumber - int,required - The team number to use in the script
- #              VM - VirtualMachineImpl,required - the VM to run the script on
- #              GuestUser - string - Username to use to log into the VM
- #                                 - Populated by ISTS_DomainAdminUser if blank
- #              GuestPassword - string - Password to use to log into the VM
- #                                     - Populated by ISTS_DomainAdminPassword if blank
- #              RunAsync - bool - Whether to wait between starting each deployment
- # Returns:     None
- # Throws:      None
- # Note:        Powershell required on the VM guest
- #>
-# Adds dns records
+<#
+    .SYNOPSIS
+    Takes DNS records from a CSV file and adds them to a Windows DNS Server.
+
+    .DESCRIPTION
+    Takes DNS records from a CSV file and adds them to a Windows DNS Server.
+
+    .PARAMETER TeamNumber
+    The team number(s) to use in the script.
+
+    .PARAMETER VM
+    The VM to run the script on.
+
+    .PARAMETER FileName
+    The file that contains the DNS records in CSV format.
+
+    .PARAMETER GuestUser
+    Username to use to log into the VM.  Populated by ISTS_DomainAdminUser if blank.
+
+    .PARAMETER GuestPassword
+    Password to use to log into the VM.  Populated by ISTS_DomainAdminPassword if blank.
+
+    .PARAMETER RunAsync
+    Whether to wait between starting each deployment.
+
+    .EXAMPLE
+    Invoke-AddDnsRecordsFromCSV -TeamNumber 1 -VM $vm -FileName .\DNSRecords.csv
+
+    .EXAMPLE
+    Invoke-AddDnsRecordsFromCSV -TeamNumber 1 -VM (Get-VM -Name "Team 1 - DC") -FileName .\DNSRecords.csv
+
+    .NOTES
+    Powershell required on the VM guest.
+#>
 function Invoke-AddDnsRecordsFromCSV {
-    param ( 
-        [Parameter(Mandatory=$true)][int]$TeamNumber,
+    Param ( 
+        [Parameter(Mandatory=$true)][int]$TeamNumber, # TODO: Update function to take multiple teams
         [Parameter(Mandatory=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM,
         [Parameter(Mandatory=$true)]$FileName,
         [String]$GuestUser = $ISTS_DomainAdminUser,
         [SecureString]$GuestPassword =  (ConvertTo-SecureString -String $ISTS_DomainAdminPassword),
         [switch]$RunAsync = $false
     )
-    if (!(Get-VCenterConnectionStatus)) { return }
+    
     Copy-VMGuestFile -Source $ISTS_ModulePath\resource\Add-DnsRecordsFromCSV.ps1 -Destination C:\Windows\Temp -VM $VM -GuestUser $GuestUser -GuestPassword $GuestPassword -LocalToGuest -Confirm:$false -Force
     Copy-VMGuestFile -Source $FileName -Destination C:\Windows\Temp -VM $VM -GuestUser $GuestUser -GuestPassword $GuestPassword -LocalToGuest -Confirm:$false -Force
     Invoke-VMScript -ScriptText "\Windows\Temp\Add-DnsRecordsFromCSV.ps1 -TeamNumber $TeamNumber -FileName \Windows\Temp\$FileName; Remove-Item -Path \Windows\Temp\Add-DnsRecordsFromCSV.ps1;Remove-Item -Path \Windows\Temp\$FileName" -VM $VM -RunAsync:$RunAsync -Confirm:$false -GuestUser $GuestUser -GuestPassword $GuestPassword
 }
 
-<# Name:        Add-WindowsHostsToDomain
- # Description: Joins windows hosts to an AD domain
- # Params:      TeamNumber - int,required - The team number that is being joined
- #              VM - VirtualMachineImpl,required - The VM's join to the domain
- #              GuestUser - string - Username to use to log into the VM
- #                                 - Populated by ISTS_WindowsDefaultUser if blank
- #              GuestPassword - string - Password to use to log into the VM
- #                                     - Populated by ISTS_WindowsDefaultPassword if blank
- #              DomainAdminUser - string - Domain admin user name to use to join the domain
- #              DomainAdminPassword - string - Domain admin user password to use to join the domain
- #              DNSServerIP - string - The IP address of the DNS server for the team
- #              RunAsync - bool - Whether to run the joins asynchronously
- # Returns:     None
- # Throws:      None
- # Note:        Can process multiple VMs at once via pipe
- # Note:        If you want to set the DNS server statically then just assign the var, it won't be changed
- #>
+<#
+    .SYNOPSIS
+    Joins Windows hosts to an AD domain.
+
+    .DESCRIPTION
+    Joins Windows hosts to an AD domain.
+
+    .PARAMETER TeamNumber
+    The team number that is being joined
+
+    .PARAMETER VM
+    The VM's join to the domain
+
+    .PARAMETER GuestUser
+    Username to use to log into the VM.  Populated by ISTS_WindowsDefaultUser if blank.
+
+    .PARAMETER GuestPassword
+    Password to use to log into the VM.  Populated by ISTS_WindowsDefaultPassword if blank.
+
+    .PARAMETER DomainAdminUser
+    Domain admin user name to use to join the domain.
+
+    .PARAMETER DomainAdminPassword
+    Domain admin user password to use to join the domain.
+
+    .PARAMETER DNSServerIP
+    The IP address of the DNS server for the team.
+
+    .PARAMETER RunAsync
+    Whether to run the joins asynchronously.
+
+    .EXAMPLE # TODO: include example for Add-WindowsHostsToDomain
+    An example
+
+    .NOTES
+    Can process multiple VMs at once via pipe. 
+    If you want to set the DNS server statically then just assign the var, it won't be changed.
+#>
 function Add-WindowsHostsToDomain{
-    param (
+    Param (
         [Parameter(Mandatory=$true)][int]$TeamNumber,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM,
         [String]$GuestUser = $ISTS_WindowsDefaultUser,
@@ -121,16 +162,30 @@ function Add-WindowsHostsToDomain{
     }
 }
 
-<# Name:        Install-PBIS
- # Description: Installs PBIS on a linux host
- # Params:      OSString - string,required - Info that could help identify the OS
- #              VM - VirtualMachineImpl,required - the VM to install PBIS on
- # Returns:     $true if install succeeded, $false if not
- # Throws:      None
- # Note:        This will download PBIS from the link in the imported ISTS-Config
- #>
+<#
+    .SYNOPSIS
+    Installs PBIS on a Linux host.
+
+    .DESCRIPTION
+    Installs PBIS on a Linux host.
+
+    .PARAMETER OSString
+    Info that could help identify the OS.
+
+    .PARAMETER VM
+    The VM to install PBIS on.
+
+    .EXAMPLE # TODO: Include example for Install-PBIS
+    An example
+
+    .OUTPUTS
+    Returns $true if install succeeded, $false if not.
+
+    .NOTES
+    This will download PBIS from the link in the imported ISTS-Config.
+#>
 function Install-PBIS {
-    param (
+    Param (
         [Parameter(Mandatory=$true)][String]$OSString,
         [Parameter(Mandatory=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM
     )
@@ -157,25 +212,46 @@ function Install-PBIS {
     return $true
 }
 
-<# Name:        Invoke-JoinLinuxHostsToDomain
- # Description: Gathers linux system info and invokes Install-PBIS on hosts
- # Params:      TeamNumber - int,required - The team number that is being joined
- #              VM - VirtualMachineImpl,required - The VM's join to the domain
- #              GuestUser - string - Username to use to log into the VM
- #                                 - Populated by ISTS_LinuxDefaultUser if blank
- #              GuestPassword - string - Password to use to log into the VM
- #                                     - Populated by ISTS_LinuxDefaultPassword if blank
- #              DomainAdminUser - string - Domain admin user name to use to join the domain
- #              DomainAdminPassword - string - Domain admin user password to use to join the domain
- #              DNSServerIP - string - The IP address of the DNS server for the team
- #              RunAsync - bool - Whether to run the joins asynchronously
- # Returns:     None
- # Throws:      None
- # Note:        Can process multiple VMs at once via pipe
- # Note:        If you want to set the DNS server statically then just assign the var, it won't be changed
- #>
+<#
+    .SYNOPSIS
+    Gathers linux system info and invokes Install-PBIS on hosts.
+
+    .DESCRIPTION
+    Gathers linux system info and invokes Install-PBIS on hosts.
+
+    .PARAMETER TeamNumber
+    The team number that is being joined.
+
+    .PARAMETER VM
+    Parameter description
+
+    .PARAMETER GuestUser
+    Username to use to log into the VM.  Populated by ISTS_LinuxDefaultUser if blank.
+
+    .PARAMETER GuestPassword
+    Password to use to log into the VM.  Populated by ISTS_LinuxDefaultPassword if blank.
+
+    .PARAMETER DomainAdminUser
+    Domain admin user name to use to join the domain.
+
+    .PARAMETER DomainAdminPassword
+    Domain admin user password to use to join the domain.
+
+    .PARAMETER DNSServerIP
+    The IP address of the DNS server for the team.
+
+    .PARAMETER RunAsync
+    Whether to run the joins asynchronously.
+
+    .EXAMPLE # TODO: Include example for Invoke-JoinLinuxHostsToDomain
+    An example
+
+    .NOTES
+    Can process multiple VMs at once via pipe.
+    If you want to set the DNS server statically then just assign the var, it won't be changed.
+#>
 function Invoke-JoinLinuxHostsToDomain {
-    param (
+    Param (
         [Parameter(Mandatory=$true)][int]$TeamNumber,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM,
         [String]$GuestUser = $ISTS_LinuxDefaultUser,
