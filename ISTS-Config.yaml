@@ -1,5 +1,67 @@
 # vCenter Configs
 vcenter:
-    - test: hello
-    - this: IPHERE
-    #sasdflkj
+    address: vcenter.whiteteam.ists
+    user: admin@whiteteam.ists
+    password: password
+    datastores:
+        - sanjuan
+        - sandos
+        - santres
+
+VMs:
+    Corp:
+        - AD:
+            address: 1
+        - Mail:
+            address: 2
+        - Kali:
+            address: 3
+        - Parrot:
+            address: 4
+        - VOIP:
+            address: 5
+    Prod:
+        - Web:
+            address: 1
+        - DB:
+            address: 2
+        - Win 8:
+            address: 3
+
+network:
+    # Use -[convert]::ToInt32($ists.network.StartingVLANID,10) to Convert to Integer
+    StartingVLANID: 200
+    VLAN_IDs:
+        Prod: $StartingVLANID + $TeamNumber * 10
+        Corp: $StartingVLANID + ($TeamNumber * 10 + 1)
+    Subnets:
+        # LEAVE LAST OCTET BLANK
+        # See VM Addressing
+        Corp: "10.2.$TeamNumber."
+        Prod: "10.3.$TeamNumber."
+        Mask: 24
+
+templates:
+    VMName: Team $TeamNumber - $VMName
+    vAppName: Team $TeamNumber
+    FolderName: Team $TeamNumber Folder
+    NetworkName: Team$TeamNumber-$Network-VLAN$VLAN_ID
+    NetBiosName: team$TeamNumber
+    ADDomain: team$TeamNumber.ists
+
+test: 
+    word: hello
+    underTest: world
+    test2:
+        underTest2: world2
+
+config:
+    domain:
+        DomainName: whiteteam.ists
+        DomainAdmin: admin
+        DomainPassword: Password
+        PbisRpmURL: http://download.beyondtrust.com/PBISO/8.3/pbis-open-8.3.0.3287.linux.x86_64.rpm.sh
+        PbisDebURL: http://download.beyondtrust.com/PBISO/8.3/pbis-open-8.3.0.3287.linux.x86_64.deb.sh
+        #DomainControllerIPTemplate: 10.2.$TeamNumber.20
+
+    
