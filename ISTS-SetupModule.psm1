@@ -161,36 +161,34 @@ function Import-Config {
 
 <#
     .SYNOPSIS
-    Sets variables for use in the script (prefixed by ISTS_) in YAML.
+    Creates a variable named $ISTS in the global scope to use for configuration.
 
     .DESCRIPTION
-    Sets variables for use in the script (prefixed by ISTS_) in YAML.
+    Creates a variable named $ISTS in the global scope to use for configuration.
+    The variable is a YAML object that is created from the config file it is given.
 
     .PARAMETER ConfigFile
-    The path to the configuration file to load.
+    The path of the configuration file to load.  Defaults to <Modulepath>\ISTS-Config.yaml
 
     .EXAMPLE
-    An example
+    Import-ISTSYAMLConfig
+
+    .EXAMPLE
+    Import-ISTSYAMLConfig -ConfigFile ../ISTS-Config.yaml
 
     .NOTES
     General notes
 #>
 function Import-YAMLConfig {
-    #TODO: Make sections in YAML meaningful.  Break up config into sections
-    #       and append it to variables under it such as vCenterIP.  "Section"+"Variable"
     Param (
-        [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Scripts.conf"
+        [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Config.yaml"
     )
-    foreach ($line in Get-Content $ConfigFile){
-        $line = $line.Trim()
-        if ($line[0] -ne "#" -and $line[0] -eq "-"){
-            
-            $splitline = $line.split(":")
-            $varName = $splitline[0].TrimStart('- ').Trim()
-            $varValue = $splitline[1..($splitline.length - 1)].TrimStart() -join "="
-            Set-Variable -Name ISTS_$varName -Value $varValue -Scope Script
-        }
-    }
+    $ISTS = Get-ISTSYaml -FromFile $ConfigFile
+
+    # Set $ISTS as a global variable so it can be accessed globally
+    Set-Variable -Name ISTS -Value $ISTS -Scope Global -Force
+
+    Write-Host "Variable `"`$ISTS`" created in the global scope."
 }
 
 <#
@@ -246,6 +244,3 @@ function Invoke-ConfirmPrompt {
         1 { Write-Host -ForegroundColor Red $OnNo; return $false }
     }
 }
-
-#### Initial config and startup ####
-Import-Config $ISTS_ModulePath\ISTS-Scripts.conf
