@@ -291,3 +291,5 @@ function Add-TeamPermissions {
         }
     }
 }
+
+# TODO: Make Add-Host function to add a new host to vCenter and fully configure it

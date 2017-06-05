@@ -36,9 +36,10 @@ network:
         Corp: $StartingVLANID + ($TeamNumber * 10 + 1)
     Subnets:
         # LEAVE LAST OCTET BLANK
-        # See VM Addressing
+        # See VM Addressing for the last octet
         Corp: "10.2.$TeamNumber."
         Prod: "10.3.$TeamNumber."
+        # Not sure if this is needed here
         Mask: 24
 
 templates:
@@ -54,6 +55,8 @@ test:
     underTest: world
     test2:
         underTest2: world2
+    number: 20
+    subnumber: 22.2
 
 config:
     domain:
@@ -62,6 +65,4 @@ config:
         DomainPassword: Password
         PbisRpmURL: http://download.beyondtrust.com/PBISO/8.3/pbis-open-8.3.0.3287.linux.x86_64.rpm.sh
         PbisDebURL: http://download.beyondtrust.com/PBISO/8.3/pbis-open-8.3.0.3287.linux.x86_64.deb.sh
-        #DomainControllerIPTemplate: 10.2.$TeamNumber.20
-
     
