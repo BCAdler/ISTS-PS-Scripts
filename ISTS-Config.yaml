@@ -1,48 +1,49 @@
 # vCenter Configs
-vcenter:
-    address: vcenter.whiteteam.ists
-    user: admin@whiteteam.ists
-    password: password
-    datastores:
+vCenter:    # TODO: Implement config variables for team permissions
+    Address: vcenter.whiteteam.ists
+    Username: admin@whiteteam.ists # Format: <user>@<domain.tld>.  Can be SSO domain or AD domain
+    Password: password
+    Datastores:
         - sanjuan
         - sandos
         - santres
+    CompetitionVDSwitch: CompetitionSwitch
+    Permissions:
+        TeamRoleName:   BlueTeam
 
-VMs:
-    Corp:
-        - AD:
-            address: 1
-        - Mail:
-            address: 2
-        - Kali:
-            address: 3
-        - Parrot:
-            address: 4
-        - VOIP:
-            address: 5
-    Prod:
-        - Web:
-            address: 1
-        - DB:
-            address: 2
-        - Win 8:
-            address: 3
-
-network:
+# Names of the VMs go here as well as their respective addresses
+NetworkConfig:
     # Use -[convert]::ToInt32($ists.network.StartingVLANID,10) to Convert to Integer
     StartingVLANID: 200
-    VLAN_IDs:
-        Prod: $StartingVLANID + $TeamNumber * 10
-        Corp: $StartingVLANID + ($TeamNumber * 10 + 1)
-    Subnets:
-        # LEAVE LAST OCTET BLANK
-        # See VM Addressing for the last octet
-        Corp: "10.2.$TeamNumber."
-        Prod: "10.3.$TeamNumber."
-        # Not sure if this is needed here
-        Mask: 24
+    Networks:   # Names of the networks
+        - Corp:
+            VLAN_ID: $StartingVLANID + $TeamNumber * 10     # Template for the VLAN ID each team's network will be assigned
+            Subnet: "10.2.$TeamNumber."     # Subnet template for each team's network
+            Mask: 24
+            VMs:    # Names of the VMs and addresses for each team's network
+                - AD:
+                    Address: 1
+                - Mail:
+                    Address: 2
+                - Kali:
+                    Address: 3
+                - Parrot:
+                    Address: 4
+                - VOIP:
+                    Address: 5
+        - Prod: 
+            VLAN_ID: $StartingVLANID + ($TeamNumber * 10 + 1)
+            Subnet: "10.3.$TeamNumber."
+            Mask: 24
+            VMs:
+                - Web:
+                    Address: 1
+                - DB:
+                    Address: 2
+                - Win 8:
+                    Address: 3
 
-templates:
+Templates:
     VMName: Team $TeamNumber - $VMName
     vAppName: Team $TeamNumber
     FolderName: Team $TeamNumber Folder
@@ -58,8 +59,10 @@ test:
     number: 20
     subnumber: 22.2
 
-config:
-    domain:
+Config:
+    # This is NOT including Team 0 (The template team)
+    NumberOfTeams: 10
+    Domain:
         DomainName: whiteteam.ists
         DomainAdmin: admin
         DomainPassword: Password
