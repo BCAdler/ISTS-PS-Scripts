@@ -143,12 +143,13 @@ function Start-DeployFromCSV {
     An example
 
     .NOTES
-    General notes
+    This function is in the process of being deprecated.
 #>
 function Import-Config {
     Param (
         [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Scripts.conf"
     )
+    Write-Warning -Message "This function is being deprecated.  The Import-ISTSYAMLConfig will be used in place of this."
     foreach ($line in Get-Content $ConfigFile){
         if ($line[0] -ne "#"){
             $splitline = $line.split("=")
