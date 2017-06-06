@@ -135,6 +135,7 @@ function Add-VMFolders {
         [Parameter(ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.FolderImpl]$ParentFolder
     )
     
+    # Remove this statement and have the parameter $ParentFolder default to Get-Datacenter[0].  Must change the type to VIContainer.
     if (!$ParentFolder) {
         $message = "No parent folder specified. Create folders in the root of the first datacenter ($((Get-Datacenter)[0]))?"
         if (!(Invoke-ConfirmPrompt -Message $message)) {
@@ -142,22 +143,16 @@ function Add-VMFolders {
         }
     }
 
-    $TeamNumbers | ForEach-Object {
-        $fname = $ISTS_TeamFolderTemplate.Replace("`$TeamNumber", $_)
-        $topdcfolder = get-view (get-view -ViewType datacenter -Filter @{"name"=(Get-Datacenter)[0].Name}).VmFolder
-        Write-Host "Creating folder $fname"
-        if ($ParentFolder) {
-            New-Folder -Name $fname -Location $ParentFolder | Out-Null
-        } else {
-            $topdcfolder.CreateFolder($fname) | Out-Null
-        }
+    foreach($TeamNumber in $TeamNumbers) {
+        $FolderName = $ISTS.Templates.FolderName.Replace('$TeamNumber', $TeamNumber)
+        New-Folder -Name $FolderName -Location $ParentFolder | Out-Null
     }
 }
 
 <#
     .SYNOPSIS
     Mass adds resource pools based on team numbers.
-    OUTDATED: Should use Start-VAppDeployment.
+    DEPRECATED: Should use Start-ISTSVAppDeployment.
 
     .DESCRIPTION
     Mass adds resource pools based on team numbers
@@ -179,6 +174,8 @@ function Add-ResourcePools {
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
         [Parameter(ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.ResourcePoolImpl]$ParentPool
     )
+    Write-Warning -Message "This function is DEPRECATED and you should be using Start-ISTSVAppDeployment"
+
     if (!(Get-VCenterConnectionStatus)) { return }
     if (!$ParentPool){
         if (!(Invoke-ConfirmPrompt -Message "No parent resource pool specified. Create resource pools in the root of the first cluster ($((Get-Cluster)[0]))?")){
@@ -206,38 +203,37 @@ function Add-ResourcePools {
     .PARAMETER TeamNumbers
     List of team numbers to add networks for.
 
-    .PARAMETER NetworkNames
-    List of network names to add.
-
     .PARAMETER DVSwitchName
-    Name of the DVSwitch to add the portgroups to.  Gets default from ISTS_DVSwitch.
-
-    .PARAMETER VlanIDMappings
-    VLAN ID mapping string for users/networks.  Gets default from ISTS_VlanIDMappings.
+    Name of the DVSwitch to add the portgroups to.  Gets default from $ISTS.vCenter.CompetitionVDSwitch
 
     .EXAMPLE
-    An example
+    Add-Networks -TeamNumbers 1,2,3,4,5,6,7,8,9,10
+
+    .EXAMPLE
+    Add-Networks -TeamNumbers 1,2,3,4 -DVSwitchName CompetitionSwitch
 
     .NOTES
-    Check out how VlanIDMappings are set up in the example config.
-    Uses ISTS_TeamNetworkTemplate from the config to name networks.
+    Check out how networks are set up in the example config.
 #>
 function Add-Networks {
     Param (
         [Parameter(Mandatory=$true)][int[]]$TeamNumbers,
-        [Parameter(Mandatory=$true)][string[]]$NetworkNames,
-        [string]$DVSwitchName = $ISTS_DVSwitchName,
-        [string]$VlanIDMappings = $ISTS_VlanIDMappings
+        [string]$DVSwitchName = $ISTS.vCenter.CompetitionVDSwitch
     )
+    # Get VDSwitch for Competition use.  If switch isn't found, STOP execution.
     $VDSwitch = Get-VDSwitch -Name $ParentDVSwitchName -ErrorAction Stop
-    foreach ($Team in $TeamNumbers) {
-        foreach ($NetID in $NetworkNames) {
-            $NetName = $ISTS_TeamNetworkTemplate.Replace("`$TeamNumber", $Team).Replace("`$NetworkID", $NetID)
-            $VlanID = [int]($VlanIDMappings.split(' ') | Where-Object {$_.Split(":")[0] -eq $Team -and $_.Split(":")[1] -eq $NetID}).split(":")[2]
-            New-VDPortGroup -VDSwitch $VDSwitch -Name "$NetName" -VLanId $VlanID
+
+    # Iterate through each team given to setup their network(s)
+    foreach ($TeamNumber in $TeamNumbers) {
+        # Iterate through each network to create for the team
+        foreach ($Network in $ISTS.NetworkConfig.Networks.Keys) {
+            # Calculate VLAN ID
+            $VLAN_ID = Invoke-Expression -Command $ISTS.NetworkConfig.Networks.$Network.VLAN_ID.Replace('$StartingVLANID', $ISTS.NetworkConfig.StartingVLANID).Replace('$TeamNumber', $TeamNumber)
+
+            $PortGroupName = $ISTS.Templates.NetworkName.Replace('$TeamNumber', $TeamNumber).Replace('$Network', $Network).Replace('$VLAN_ID', $VLAN_ID)
+            New-VDPortGroup -VDSwitch $VDSwitch -Name $PortGroupName -VLanId $VLAN_ID -RunAsync
         }
     }
-
 }
 
 <#
@@ -276,7 +272,6 @@ function Add-TeamPermissions {
     if($CreateAccounts) {
         Write-Host "Creating Team Accounts..." -ForegroundColor Yellow
         Write-Host "Not Implemented Yet But Will Be Soon......" -ForegroundColor Yellow
-
     }
 
     foreach($i in $TeamNumbers) {
@@ -291,5 +286,7 @@ function Add-TeamPermissions {
         }
     }
 }
+
+# TODO: Make Add-TeamAccounts to add accounts for all of the teams into vCenter.
 
 # TODO: Make Add-Host function to add a new host to vCenter and fully configure it
