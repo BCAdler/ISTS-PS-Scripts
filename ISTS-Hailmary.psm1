@@ -43,6 +43,13 @@ function Start-Hailmary {
     Add-ISTSTeamAccounts -TeamNumbers $TeamNumbers
 
     # 6
+    # If StartVAppAfterDeploy -like yes, add switch to vApp deployment
+    if($ISTS.Config.StartVAppAfterDeploy -like "yes") {
+        Start-ISTSVAppDeployment -TeamNumbers $TeamNumbers -StartVApp:$true
+    }
+    else {
+        Start-ISTSVAppDeployment -TeamNumbers $TeamNumbers
+    }
 
     # 7
 
