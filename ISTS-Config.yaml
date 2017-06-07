@@ -18,7 +18,7 @@ NetworkConfig:
     # Use -[convert]::ToInt32($ists.network.StartingVLANID,10) to Convert to Integer
     StartingVLANID: 200
     Networks:   # Names of the networks
-        - Corp:
+        Corp:
             TeamAccess: yes     # Value of whether or not the teams can access this network from vCenter
             VLAN_ID: $StartingVLANID + $TeamNumber * 10     # Template for the VLAN ID each team's network will be assigned
             Subnet: "10.2.$TeamNumber."     # Subnet template for each team's network
@@ -34,7 +34,7 @@ NetworkConfig:
                     Address: 4
                 - VOIP:
                     Address: 5
-        - Prod: 
+        Prod: 
             TeamAccess: no
             VLAN_ID: $StartingVLANID + ($TeamNumber * 10 + 1)
             Subnet: "10.3.$TeamNumber."
