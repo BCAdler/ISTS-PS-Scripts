@@ -9,7 +9,7 @@
         4:  Create team folders that will show up in "VMs and Templates"
         5:  Create team accounts on vCenter that they can use to access their infrastructure.
         6:  Deploy team vApps from template vApp
-        7:  Set permissions all all of team objects to restrict what they can access in vCenter.
+        7:  Set permissions on all team objects to restrict what they can access in vCenter.
 #>
 
 function Start-Hailmary {
