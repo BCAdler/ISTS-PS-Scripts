@@ -182,7 +182,7 @@ function Import-Config {
 #>
 function Import-YAMLConfig {
     Param (
-        [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Config.yaml"
+        [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Config.yml"
     )
     $ISTS = Get-ISTSYaml -FromFile $ConfigFile
 
