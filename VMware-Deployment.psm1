@@ -286,7 +286,6 @@ function Add-TeamPermissions {
     # Get role to be assigned
     $Role = Get-VIRole -Name $RoleName
     
-    # TODO: Doesn't differentiate between Corp and Prod.  AKA: User shouldn't have access to Prod VMs directly.
     foreach($TeamNumber in $TeamNumbers) {
         # Set permissions on vApps
 
@@ -312,7 +311,16 @@ function Add-TeamPermissions {
 
         # Optionally set permissions on port groups
         if($PortGroupPermissions) {
+            # Iterate through each network to create for the team
+            foreach ($Network in $ISTS.NetworkConfig.Networks.Keys) {
+                if($ISTS.NetworkConfigs.Networks.$Network.TeamAccess -eq no) {
+                    continue
+                }
 
+                $PortGroupName = "$ISTS.Templates.NetworkName.Replace('$TeamNumber', $TeamNumber).Replace('$Network', $Network)*"
+                $PortGroup = Get-VDPortgroup -Name $PortGroupName
+                New-VIPermission -Entity $PortGroup -Role $Role -Principal $Username
+            }
         }
     }
 }
