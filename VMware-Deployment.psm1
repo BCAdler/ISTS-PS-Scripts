@@ -313,7 +313,7 @@ function Add-TeamPermissions {
         if($PortGroupPermissions) {
             # Iterate through each network to create for the team
             foreach ($Network in $ISTS.NetworkConfig.Networks.Keys) {
-                if($ISTS.NetworkConfigs.Networks.$Network.TeamAccess -eq no) {
+                if($ISTS.NetworkConfigs.Networks.$Network.TeamAccess -eq 'no') {
                     continue
                 }
 
