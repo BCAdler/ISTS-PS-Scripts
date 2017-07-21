@@ -170,11 +170,20 @@ function Remove-AllTeamVMFromDisk {
     Param (
         [Parameter(Mandatory=$true)][string]$VM
     )
-    # TODO: Add mandatory confirmation of VMs to be deleted.
     # TODO: Exclude any VMs belonging to Team 0.
+    $vms = Get-VM -Name "*$VM"
+    foreach ($vm in $vms) {
+        Write-Host $vm.Name -ForegroundColor Red
+    }
+
+    $PromptTitle = "ALL TEAM VM DELETION!"
+    $PromptMessage = "Verify you would like to delete ALL of the VMs listed above."
+    if(!Invoke-ISTSConfirmPrompt -Title $PromptTitle -Message $PromptMessage) {
+        return
+    }
 
     Write-Host "Stopping and Destroying all `"$VM`" VMs" -ForegroundColor Red
-    $vms = Get-VM -Name "*$VM"
+    
     $task = Stop-VM -VM $vms -Kill -RunAsync -Confirm:$false
     Wait-Task -Task $task
 
