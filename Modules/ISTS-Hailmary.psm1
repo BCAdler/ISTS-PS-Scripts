@@ -5,9 +5,9 @@
     Steps:
         1:  Import YAML config using Import-ISTSYAMLConfig
         2:  Connect to vCenter using settings from config.
-        3:  Create team networks/portgroups on Competition Distributed Switch
-        4:  Create team folders that will show up in "VMs and Templates"
-        5:  Create team accounts on vCenter that they can use to access their infrastructure.
+        3:  Create team accounts on vCenter that they can use to access their infrastructure.
+        4:  Create team networks/portgroups on Competition Distributed Switch
+        5:  Create team folders that will show up in "VMs and Templates"
         6:  Deploy team vApps from template vApp
         7:  Set permissions on all team objects to restrict what they can access in vCenter.
 #>
@@ -20,7 +20,7 @@ function Start-Hailmary {
     # Initial Setup
 
     # Get array of team numbers
-    $TeamNumbers = 0..$ISTS.config.NumberOfTeams
+    $TeamNumbers = 1..$ISTS.config.NumberOfTeams
 
     # Numbers below correspond to the steps as outlined above
     # 1
@@ -32,15 +32,15 @@ function Start-Hailmary {
     Connect-VIServer -Server $ISTS.vcenter.address -Credential $vCenterCred -ErrorAction Stop
 
     # 3
-    Add-ISTSNetworks -TeamNumbers $TeamNumbers
+    Add-ISTSTeamAccounts -TeamNumbers $TeamNumbers
 
     # 4
-    # Make parent folder for teams
-    $ParentFolder = New-Folder -Name "Team Folders" -Location Get-Datacenter[0]
-    Add-ISTSVMFolders -TeamNumbers $TeamNumbers -ParentFolder $ParentFolder
+    Add-ISTSNetworks -TeamNumbers $TeamNumbers
 
     # 5
-    Add-ISTSTeamAccounts -TeamNumbers $TeamNumbers
+    # Make parent folder for teams
+    $ParentFolder = New-Folder -Name "Team Folders" -Location Get-Datacenter[0]
+    Add-ISTSVMFolders -TeamNumbers $TeamNumbers -ParentFolder $ParentFolder    
 
     # 6
     # If StartVAppAfterDeploy -like yes, add switch to vApp deployment
@@ -52,5 +52,5 @@ function Start-Hailmary {
     }
 
     # 7
-
+    Set-TeamPermissions -TeamNumbers $TeamNumbers
 }
