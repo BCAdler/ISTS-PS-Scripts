@@ -291,27 +291,33 @@ function Add-TeamPermissions {
 
         # Regex Meaning: vApp name with "Team $i" that matches the number and then anything after the number or nothing
         #                Fixes issues where "Team $i*" will match "Team 1" and "Team 10."
-        $vApps = Get-VApp | Where-Object { $_.Name -match "Team \b${TeamNumber}\b(?:.*)?" }
-
-        # TODO: Only get vApp(s) the teams should have access to.  Must edit above statement
+        #$vApps = Get-VApp | Where-Object { $_.Name -match "Team \b${TeamNumber}\b(?:.*)?" }
 
         
         $Username = $ISTS.Templates.Username.Replace('$TeamNumber', $TeamNumber)
-        foreach($vApp in $vApps) {
-            Write-Host "Assigning User: $SSO_Domain\$Username with Role: $Role to: $($vApp.Name)"
-            New-VIPermission -Entity $vApp -Role $Role -Principal "$SSO_Domain\$Username"
+        $Principal = Get-VIAccount -Name "$Username@$SSO_Domain" -User
+        foreach($Network in $ISTS.NetworkConfig.Networks.Keys) {
+            if($ISTS.NetworkConfig.Networks[$Network].TeamAccess -eq 'no') {
+                continue
+            }
+
+            $vAppName = ($ISTS.Templates.vAppName.Replace('$TeamNumber', $TeamNumber)).Replace('$Network', $Network)
+            $vApp = Get-VApp -Name $vAppName
+
+            Write-Host "Assigning User: $Username@$SSO_Domain with Role: $Role to: $($vApp.Name)"
+            New-VIPermission -Entity $vApp -Role $Role -Principal $Principal
         }
 
         # Optionally set permissions on folders
         if($FolderPermissions) {
             $FolderName = $ISTS.Templates.FolderName.Replace('$TeamNumber', $TeamNumber)
             $Folder = Get-Folder -Name $FolderName
-            New-VIPermission -Entity $Folder -Role $Role -Principal $Username
+            New-VIPermission -Entity $Folder -Role $Role -Principal $Principal -Propagate $false
         }
 
         # Optionally set permissions on port groups
         if($PortGroupPermissions) {
-            # Iterate through each network to create for the team
+            # Iterate through each network
             foreach ($Network in $ISTS.NetworkConfig.Networks.Keys) {
                 if($ISTS.NetworkConfigs.Networks.$Network.TeamAccess -eq 'no') {
                     continue
@@ -319,7 +325,7 @@ function Add-TeamPermissions {
 
                 $PortGroupName = "$ISTS.Templates.NetworkName.Replace('$TeamNumber', $TeamNumber).Replace('$Network', $Network)*"
                 $PortGroup = Get-VDPortgroup -Name $PortGroupName
-                New-VIPermission -Entity $PortGroup -Role $Role -Principal $Username
+                New-VIPermission -Entity $PortGroup -Role $Role -Principal $Principal
             }
         }
     }
@@ -333,7 +339,7 @@ function Add-TeamPermissions {
     Adds team accounts to vCenter so users can log into their environment.
 
     .PARAMETER TeamNumbers
-    List of team numbers to configure permissions for.
+    List of team numbers to add accounts for for.
 
     .EXAMPLE
     Add-TeamAccounts -TeamNumbers 1,2,3,4,5,6,7,8,9,10
