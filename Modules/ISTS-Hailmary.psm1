@@ -52,5 +52,5 @@ function Start-Hailmary {
     }
 
     # 7
-    Set-TeamPermissions -TeamNumbers $TeamNumbers
+    Add-ISTSTeamPermissions -TeamNumbers $TeamNumbers
 }
