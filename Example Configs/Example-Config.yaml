@@ -1,0 +1,70 @@
+# vCenter Configs
+vCenter:
+    Address: vcenter.domain.tld
+    Username: admin@domain.tld # Format: <user>@<domain.tld>.  Can be SSO domain or AD domain if user has enough privileges.
+    Password: password
+    SSO_Domain: sso.vsphere
+    Datastores:
+        - datastore1
+        - datastore2
+        - datastore3
+    CompetitionVDSwitch: CompetitionSwitch
+    Permissions:
+        TeamRoleName:   BlueTeam
+        TeamPassword:   Passw0rd-123$%^
+
+# Names of the VMs go here as well as their respective addresses
+NetworkConfig:
+    # Use -[convert]::ToInt32($ists.network.StartingVLANID,10) to Convert to Integer
+    StartingVLANID: 200
+    Networks:   # Names of the networks
+        Corp:
+            TeamAccess: yes     # Value of whether or not the teams can access this network from vCenter
+            VLAN_ID: $StartingVLANID + $TeamNumber * 10     # Template for the VLAN ID each team's network will be assigned
+            Subnet: "10.2.$TeamNumber."     # Subnet template for each team's network
+            Mask: 24
+            VMs:    # Names of the VMs and addresses for each team's network
+                - AD:
+                    Address: 1
+                - Mail:
+                    Address: 2
+                - Kali:
+                    Address: 3
+                - Parrot:
+                    Address: 4
+                - VOIP:
+                    Address: 5
+        Prod: 
+            TeamAccess: no
+            VLAN_ID: $StartingVLANID + ($TeamNumber * 10 + 1)
+            Subnet: "10.3.$TeamNumber."
+            Mask: 24
+            VMs:
+                - Web:
+                    Address: 1
+                - DB:
+                    Address: 2
+                - Win 8:
+                    Address: 3
+
+Templates:
+    VMName: Team $TeamNumber - $VMName
+    vAppName:   Team $TeamNumber - $Network
+    FolderName: Team $TeamNumber Folder
+    NetworkName:    Team$TeamNumber-$Network-VLAN$VLAN_ID
+    NetBiosName:    team$TeamNumber
+    Username:   team$TeamNumber
+    ADDomain: team$TeamNumber.ists
+
+Config:
+    # This is NOT including Team 0 (The template team)
+    NumberOfTeams: 10
+    StartVAppAfterDeploy: no
+    TemplateVApp:   Team 0
+    Domain:
+        DomainName: domain.tld
+        DomainAdmin: admin
+        DomainPassword: Password
+        PbisRpmURL: http://download.beyondtrust.com/PBISO/8.3/pbis-open-8.3.0.3287.linux.x86_64.rpm.sh
+        PbisDebURL: http://download.beyondtrust.com/PBISO/8.3/pbis-open-8.3.0.3287.linux.x86_64.deb.sh
+    
