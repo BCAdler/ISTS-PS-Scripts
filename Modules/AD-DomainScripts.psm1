@@ -142,21 +142,21 @@ function Add-WindowsHostsToDomain{
     Param (
         [Parameter(Mandatory=$true)][int]$TeamNumber,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true)][VMware.VimAutomation.ViCore.Impl.V1.Inventory.VirtualMachineImpl]$VM,
-        [String]$GuestUser = $ISTS_WindowsDefaultUser,
-        [SecureString]$GuestPassword = (ConvertTo-SecureString -String $ISTS_WindowsDefaultPassword -AsPlainText -),
-        [String]$DomainAdminUser = $ISTS_DomainAdminUser,
-        [SecureString]$DomainAdminPassword = (ConvertTo-SecureString -String $ISTS_DomainAdminPassword -AsPlainText),
-        [String]$DNSServerIP = $ISTS_DomainControllerIPTemplate.replace("`$TeamNumber", $TeamNumber),
+        [String]$GuestUser = $ISTS.Config.Domain.GuestUser,
+        [SecureString]$GuestPassword = (ConvertTo-SecureString -String $ISTS.Config.Domain.GuestPassword -AsPlainText -),
+        [String]$DomainAdminUser = $ISTS.Config.Domain.DomainAdmin,
+        [SecureString]$DomainAdminPassword = (ConvertTo-SecureString -String $ISTS.Config.Domain.DomainPassword -AsPlainText),
+        #[String]$DNSServerIP = $ISTS_DomainControllerIPTemplate.replace("`$TeamNumber", $TeamNumber),
         [switch]$RunAsync = $false
     )
     begin {
         if (!(Get-VCenterConnectionStatus)) { return }
-        $domain = $ISTS_DomainNameTemplate.replace("`$TeamNumber", $TeamNumber)
+        $domain = $ISTS.Templates.ADDomain('$TeamNumber', $TeamNumber)
     }
     process {
         foreach ($V in $VM){
             Invoke-VMScript -ScriptText "netsh int ipv4 set dns 'Local Area Connection' static 10.2.$TeamNumber.20" -VM $V -GuestUser $GuestUser -GuestPassword $GuestPassword -Confirm:$false
-            Invoke-VMScript -ScriptText "Set-DnsClientServerAddress -ServerAddress $DNSServerIP -InterfaceAlias ((Get-NetAdapter | Where {`$_.Name -Like '*Ethernet*' -or `$_.Name -Like '*Local Area Connection*'})[0])" -VM $V -GuestUser $GuestUser -GuestPassword $GuestPassword -Confirm:$false
+            #Invoke-VMScript -ScriptText "Set-DnsClientServerAddress -ServerAddress $DNSServerIP -InterfaceAlias ((Get-NetAdapter | Where {`$_.Name -Like '*Ethernet*' -or `$_.Name -Like '*Local Area Connection*'})[0])" -VM $V -GuestUser $GuestUser -GuestPassword $GuestPassword -Confirm:$false
             Invoke-VMScript -ScriptText "Add-Computer -DomainName '$domain' -Credential (New-Object System.Management.Automation.PSCredential('$DomainAdminUser@$domain',('$DomainAdminPassword' | ConvertTo-SecureString -asPlainText -Force)))" -VM $V -GuestUser $GuestUser -GuestPassword $GuestPassword -RunAsync:$RunAsync -Confirm:$false
         }
     }
