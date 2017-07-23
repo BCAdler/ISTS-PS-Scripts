@@ -1,5 +1,5 @@
 # vCenter Configs
-vCenter:    # TODO: Implement config variables for team permissions
+vCenter:
     Address: vcenter.whiteteam.ists
     Username: admin@whiteteam.ists # Format: <user>@<domain.tld>.  Can be SSO domain or AD domain if user has enough privileges.
     Password: password
