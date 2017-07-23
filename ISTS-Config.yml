@@ -19,15 +19,17 @@ NetworkConfig:
     StartingVLANID: 200
     Networks:   # Names of the networks
         Corp:
-            TeamAccess: yes     # Value of whether or not the teams can access this network from vCenter
+            TeamAccess: yes     # Value of whether or not the teams can access these VMs/Network from vCenter
             VLAN_ID: $StartingVLANID + $TeamNumber * 10     # Template for the VLAN ID each team's network will be assigned
             Subnet: "10.2.$TeamNumber."     # Subnet template for each team's network
             Mask: 24
             VMs:    # Names of the VMs and addresses for each team's network
-                - AD:
+                - AD: # This attribute will be used for the Machine's DNS name
                     Address: 1
+                    DomainController: yes
                 - Mail:
                     Address: 2
+                    MailServer: yes # Determines if an MX record is added in DNS
                 - Kali:
                     Address: 3
                 - Parrot:
@@ -46,6 +48,7 @@ NetworkConfig:
                     Address: 2
                 - Win 8:
                     Address: 3
+                    DomainMember: yes # Determines if the machine should be added to the team's AD domain
 
 Templates:
     VMName: Team $TeamNumber - $VMName
@@ -73,6 +76,8 @@ Config:
         DomainName: whiteteam.ists
         DomainAdmin: admin
         DomainPassword: Password
+        GuestUser: Administrator
+        GuestPassword: Password
         PbisRpmURL: http://download.beyondtrust.com/PBISO/8.3/pbis-open-8.3.0.3287.linux.x86_64.rpm.sh
         PbisDebURL: http://download.beyondtrust.com/PBISO/8.3/pbis-open-8.3.0.3287.linux.x86_64.deb.sh
     
