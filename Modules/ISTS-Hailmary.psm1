@@ -27,9 +27,7 @@ function Start-Hailmary {
     Import-ISTSYAMLConfig -ConfigFile $ConfigFile -ErrorAction Stop
 
     # 2
-    $vCenterPass = ConvertTo-SecureString -String $ISTS.vcenter.password -AsPlainText -Force
-    $vCenterCred = New-Object System.Management.Automation.PSCredential($ISTS.vcenter.username, $vCenterPass)
-    Connect-VIServer -Server $ISTS.vcenter.address -Credential $vCenterCred -ErrorAction Stop
+    Connect-ISTSVCenter
 
     # 3
     Add-ISTSTeamAccounts -TeamNumbers $TeamNumbers
