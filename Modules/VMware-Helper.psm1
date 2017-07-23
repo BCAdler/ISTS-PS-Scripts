@@ -20,18 +20,19 @@
 #>
 function Connect-VCenter {
     Param (
-        [PSCredential]$ISTS_VCenterCred
+        [PSCredential]$vCenterCred = $null
     )
+    # If credential parameter is null, get connection parameters from config
+    if($vCenterCred = $null) {
+        $vCenterPass = ConvertTo-SecureString -String $ISTS.vCenter.Password -AsPlainText -Force
+        $vCenterCred = New-Object System.Management.Automation.PSCredential($ISTS.vcenter.username, $vCenterPass)
+    }
+
     try { #make sure we aren't already connected
         $server = (Get-VIAccount -ErrorAction SilentlyContinue)[0].Server.Name
         Write-Warning "It looks like you are already connected to the server at `"$server`", disconnect with Disconnect-VIServer and then try again"
     } catch { 
-        if ($ISTS_VCenterCred){
-            #Write-Warning "These credentials are stored in memory in plain text, just so you know"
-            Connect-VIServer -Server $ISTS_VCenterServerAddress -Protocol Https -Force -ErrorAction Stop -Credential $ISTS_VCenterCred
-        } else {
-            Connect-VIServer -Server $ISTS_VCenterServerAddress -Protocol Https -Force -ErrorAction Stop
-        }
+        Connect-VIServer -Server $ISTS.vCenter.Address -Protocol Https -Force -ErrorAction Stop -Credential $ISTS_VCenterCred
     }
 }
 
