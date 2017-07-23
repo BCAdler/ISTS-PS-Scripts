@@ -15,35 +15,38 @@
 function Start-Hailmary {
     Param (
         # Parameters will be added as necessary to keep up-to-date with the steps above during development.
-        [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Config.yaml"
+        [string]$ConfigFile = "$($ISTS_ModulePath)\ISTS-Config.yaml",
+        [int[]]$TeamNumbers = $null
     )
     # Initial Setup
 
     # Get array of team numbers
-    $TeamNumbers = 1..$ISTS.config.NumberOfTeams
+    if($TeamNumbers -eq $null) {
+        $TeamNumbers = 1..$ISTS.config.NumberOfTeams
+    }
 
     # Numbers below correspond to the steps as outlined above
     # 1
     Import-ISTSYAMLConfig -ConfigFile $ConfigFile -ErrorAction Stop
 
     # 2
-    Connect-ISTSVCenter
+    Connect-ISTSVCenter -ErrorAction Stop
 
     # 3
-    Add-ISTSTeamAccounts -TeamNumbers $TeamNumbers
+    Add-ISTSTeamAccounts -TeamNumbers $TeamNumbers -ErrorAction Stop
 
     # 4
-    Add-ISTSNetworks -TeamNumbers $TeamNumbers
+    Add-ISTSNetworks -TeamNumbers $TeamNumbers -ErrorAction Stop
 
     # 5
     # Make parent folder for teams
     $ParentFolder = New-Folder -Name "Team Folders" -Location Get-Datacenter[0]
-    Add-ISTSVMFolders -TeamNumbers $TeamNumbers -ParentFolder $ParentFolder    
+    Add-ISTSVMFolders -TeamNumbers $TeamNumbers -ParentFolder $ParentFolder -ErrorAction Stop 
 
     # 6
     # If StartVAppAfterDeploy -like yes, add switch to vApp deployment
     if($ISTS.Config.StartVAppAfterDeploy -like "yes") {
-        Start-ISTSVAppDeployment -TeamNumbers $TeamNumbers -StartVApp:$true
+        Start-ISTSVAppDeployment -TeamNumbers $TeamNumbers -StartVApp
     }
     else {
         Start-ISTSVAppDeployment -TeamNumbers $TeamNumbers
