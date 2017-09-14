@@ -3,7 +3,7 @@
 #>
 
 # Get the path the module is running in
-$ISTS_ModulePath = Split-Path -parent $PSCommandPath
+Set-Variable -Name "ISTS_ModulePath" -Scope Global -Value (Split-Path -parent $PSCommandPath)
 
 <#
     .SYNOPSIS
